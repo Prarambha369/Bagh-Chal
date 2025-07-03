@@ -129,3 +129,14 @@
 <div class="status-panel">
     <div id="status">Loading game...</div>
 </div>
+<canvas id="gameCanvas" class="game-board" width="500" height="500"></canvas>
+
+<div class="controls">
+    <button class="btn btn-restart" onclick="resetGame()">🔄 Restart Game</button>
+    <button class="btn btn-rules" onclick="showRules()">📖 Rules</button>
+    <button class="btn btn-quit" onclick="window.close()">❌ Quit</button>
+</div>
+
+<div class="instructions" id="instructions">
+    Click to start playing!
+</div>
