@@ -111,3 +111,32 @@ def setup_connections(self):
                     neighbors.append((ni, nj))
 
             self.connections[(i, j)] = neighbors
+def get_canvas_coords(self, row, col):
+    """Convert board coordinates to canvas coordinates"""
+    x = self.OFFSET + col * self.CELL_SIZE
+    y = self.OFFSET + row * self.CELL_SIZE
+    return x, y
+
+def get_board_coords(self, canvas_x, canvas_y):
+    """Convert canvas coordinates to board coordinates"""
+    col = round((canvas_x - self.OFFSET) / self.CELL_SIZE)
+    row = round((canvas_y - self.OFFSET) / self.CELL_SIZE)
+
+    if 0 <= row < self.BOARD_SIZE and 0 <= col < self.BOARD_SIZE:
+        return row, col
+    return None, None
+
+def draw_board(self):
+    """Draw the game board"""
+    self.canvas.delete("all")
+
+    # Draw grid lines
+    for i in range(self.BOARD_SIZE):
+        for j in range(self.BOARD_SIZE):
+            x, y = self.get_canvas_coords(i, j)
+
+            # Draw lines to connected positions
+            for ni, nj in self.connections[(i, j)]:
+                if ni > i or (ni == i and nj > j):  # Avoid drawing duplicate lines
+                    nx, ny = self.get_canvas_coords(ni, nj)
+                    self.canvas.create_line(x, y, nx, ny, fill='#ecf0f1', width=2)
