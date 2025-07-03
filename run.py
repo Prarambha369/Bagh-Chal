@@ -140,3 +140,13 @@ def draw_board(self):
                 if ni > i or (ni == i and nj > j):  # Avoid drawing duplicate lines
                     nx, ny = self.get_canvas_coords(ni, nj)
                     self.canvas.create_line(x, y, nx, ny, fill='#ecf0f1', width=2)
+
+
+        # Draw intersection points
+        for i in range(self.BOARD_SIZE):
+            for j in range(self.BOARD_SIZE):
+                x, y = self.get_canvas_coords(i, j)
+                self.canvas.create_oval(x-4, y-4, x+4, y+4, fill='#ecf0f1', outline='#bdc3c7')
+
+        # Draw pieces
+        self.draw_pieces()
