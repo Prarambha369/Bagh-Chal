@@ -96,3 +96,18 @@ class BaghChalTkinter:
 
         self.draw_board()
         self.update_status()
+def setup_connections(self):
+    """Setup valid connections between board positions"""
+    self.connections = {}
+    for i in range(self.BOARD_SIZE):
+        for j in range(self.BOARD_SIZE):
+            neighbors = []
+
+            # All 8 directions (horizontal, vertical, diagonal)
+            directions = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+            for di, dj in directions:
+                ni, nj = i + di, j + dj
+                if 0 <= ni < self.BOARD_SIZE and 0 <= nj < self.BOARD_SIZE:
+                    neighbors.append((ni, nj))
+
+            self.connections[(i, j)] = neighbors
