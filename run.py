@@ -74,3 +74,25 @@ class BaghChalTkinter:
     self.instruction_label = tk.Label(self.root, text="", font=('Arial', 10),
                                       bg='#2c3e50', fg='#f39c12', wraplength=600)
     self.instruction_label.pack(pady=5
+
+    def reset_game(self):
+        """Reset the game to initial state"""
+        self.current_phase = self.PLACEMENT_PHASE
+        self.current_player = self.GOAT_PLAYER
+        self.board = [[self.EMPTY for _ in range(self.BOARD_SIZE)] for _ in range(self.BOARD_SIZE)]
+        self.goats_placed = 0
+        self.goats_captured = 0
+        self.selected_row = -1
+        self.selected_col = -1
+        self.piece_selected = False
+        self.game_over = False
+        self.winner = None
+
+        # Place initial tigers at corners
+        self.board[0][0] = self.TIGER
+        self.board[0][4] = self.TIGER
+        self.board[4][0] = self.TIGER
+        self.board[4][4] = self.TIGER
+
+        self.draw_board()
+        self.update_status()
