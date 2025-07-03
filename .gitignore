@@ -207,3 +207,9 @@ marimo/_lsp/
 __marimo__/
 !/ty.py
 /ty.py
+/.idea/
+/.idea/.gitignore
+/.idea/Bagh-Chal.iml
+/.idea/modules.xml
+/.idea/vcs.xml
+/.idea/workspace.xml
