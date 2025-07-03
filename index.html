@@ -178,3 +178,39 @@
         </div>
     </div>
 </div>
+<script>
+    // Game constants
+    const BOARD_SIZE = 5;
+    const CANVAS_SIZE = 500;
+    const CELL_SIZE = CANVAS_SIZE / (BOARD_SIZE + 1);
+    const OFFSET = CELL_SIZE;
+
+    // Game states
+    const PLACEMENT_PHASE = 0;
+    const MOVEMENT_PHASE = 1;
+
+    // Piece types
+    const EMPTY = 0;
+    const TIGER = 1;
+    const GOAT = 2;
+
+    // Players
+    const TIGER_PLAYER = 0;
+    const GOAT_PLAYER = 1;
+
+    // Game variables
+    let currentPhase = PLACEMENT_PHASE;
+    let currentPlayer = GOAT_PLAYER;
+    let board = [];
+    let goatsPlaced = 0;
+    let goatsCaptured = 0;
+    let selectedRow = -1;
+    let selectedCol = -1;
+    let pieceSelected = false;
+    let gameOver = false;
+    let winner = null;
+    let connections = {};
+
+    // Canvas setup
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
