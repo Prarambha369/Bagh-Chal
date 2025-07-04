@@ -170,3 +170,43 @@ def draw_board(self):
         if self.piece_selected:
             x, y = self.get_canvas_coords(self.selected_row, self.selected_col)
             self.canvas.create_oval(x-25, y-25, x+25, y+25, fill='', outline='#2ecc71', width=4)
+
+def is_valid_move(self, from_row, from_col, to_row, to_col):
+    """Check if a move is valid"""
+    if self.board[to_row][to_col] != self.EMPTY:
+        return False
+
+    # Check direct move (adjacent)
+    if (to_row, to_col) in self.connections[(from_row, from_col)]:
+        return True
+
+    # Check tiger jump (capture)
+    if self.board[from_row][from_col] == self.TIGER:
+        # Calculate middle position for jump
+        if abs(to_row - from_row) == 2 and abs(to_col - from_col) <= 2:
+            mid_row = (from_row + to_row) // 2
+            mid_col = (from_col + to_col) // 2
+            if self.board[mid_row][mid_col] == self.GOAT:
+                return True
+        elif abs(to_col - from_col) == 2 and abs(to_row - from_row) <= 2:
+            mid_row = (from_row + to_row) // 2
+            mid_col = (from_col + to_col) // 2
+            if self.board[mid_row][mid_col] == self.GOAT:
+                return True
+
+    return False
+
+def make_move(self, from_row, from_col, to_row, to_col):
+    """Execute a move"""
+    piece = self.board[from_row][from_col]
+    self.board[from_row][from_col] = self.EMPTY
+    self.board[to_row][to_col] = piece
+
+    # Check for capture
+    if piece == self.TIGER and (abs(to_row - from_row) == 2 or abs(to_col - from_col) == 2):
+        mid_row = (from_row + to_row) // 2
+        mid_col = (from_col + to_col) // 2
+        if self.board[mid_row][mid_col] == self.GOAT:
+            self.board[mid_row][mid_col] = self.EMPTY
+            self.goats_captured += 1
+            
