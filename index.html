@@ -239,3 +239,40 @@
             }
         }
     }
+    function resetGame() {
+        currentPhase = PLACEMENT_PHASE;
+        currentPlayer = GOAT_PLAYER;
+        board = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(EMPTY));
+        goatsPlaced = 0;
+        goatsCaptured = 0;
+        selectedRow = -1;
+        selectedCol = -1;
+        pieceSelected = false;
+        gameOver = false;
+        winner = null;
+
+        // Place initial tigers at corners
+        board[0][0] = TIGER;
+        board[0][4] = TIGER;
+        board[4][0] = TIGER;
+        board[4][4] = TIGER;
+
+        drawBoard();
+        updateStatus();
+    }
+
+    function getCanvasCoords(row, col) {
+        const x = OFFSET + col * CELL_SIZE;
+        const y = OFFSET + row * CELL_SIZE;
+        return [x, y];
+    }
+
+    function getBoardCoords(canvasX, canvasY) {
+        const col = Math.round((canvasX - OFFSET) / CELL_SIZE);
+        const row = Math.round((canvasY - OFFSET) / CELL_SIZE);
+
+        if (row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE) {
+            return [row, col];
+        }
+        return [null, null];
+    }
