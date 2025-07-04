@@ -276,3 +276,26 @@
         }
         return [null, null];
     }
+    function drawBoard() {
+        ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
+        // Draw grid lines
+        ctx.strokeStyle = '#ecf0f1';
+        ctx.lineWidth = 2;
+
+        for (let i = 0; i < BOARD_SIZE; i++) {
+            for (let j = 0; j < BOARD_SIZE; j++) {
+                const [x, y] = getCanvasCoords(i, j);
+                const neighbors = connections[`${i},${j}`];
+
+                for (const [ni, nj] of neighbors) {
+                    if (ni > i || (ni === i && nj > j)) { // Avoid duplicate lines
+                        const [nx, ny] = getCanvasCoords(ni, nj);
+                        ctx.beginPath();
+                        ctx.moveTo(x, y);
+                        ctx.lineTo(nx, ny);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
