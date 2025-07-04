@@ -214,3 +214,28 @@
     // Canvas setup
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
+    // Initialize game
+    function initGame() {
+        setupConnections();
+        resetGame();
+        canvas.addEventListener('click', onCanvasClick);
+    }
+
+    function setupConnections() {
+        connections = {};
+        for (let i = 0; i < BOARD_SIZE; i++) {
+            for (let j = 0; j < BOARD_SIZE; j++) {
+                const neighbors = [];
+                const directions = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
+
+                for (const [di, dj] of directions) {
+                    const ni = i + di;
+                    const nj = j + dj;
+                    if (ni >= 0 && ni < BOARD_SIZE && nj >= 0 && nj < BOARD_SIZE) {
+                        neighbors.push([ni, nj]);
+                    }
+                }
+                connections[`${i},${j}`] = neighbors;
+            }
+        }
+    }
