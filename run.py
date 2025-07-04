@@ -150,3 +150,23 @@ def draw_board(self):
 
         # Draw pieces
         self.draw_pieces()
+        def draw_pieces(self):
+            """Draw tigers and goats on the board"""
+        for i in range(self.BOARD_SIZE):
+            for j in range(self.BOARD_SIZE):
+                x, y = self.get_canvas_coords(i, j)
+
+                if self.board[i][j] == self.TIGER:
+                    # Draw tiger (orange circle with T)
+                    self.canvas.create_oval(x-20, y-20, x+20, y+20, fill='#ff6b35', outline='#d35400', width=3)
+                    self.canvas.create_text(x, y, text='🐅', font=('Arial', 16))
+
+                elif self.board[i][j] == self.GOAT:
+                    # Draw goat (white circle with G)
+                    self.canvas.create_oval(x-15, y-15, x+15, y+15, fill='#ecf0f1', outline='#95a5a6', width=2)
+                    self.canvas.create_text(x, y, text='🐐', font=('Arial', 12))
+
+        # Highlight selected piece
+        if self.piece_selected:
+            x, y = self.get_canvas_coords(self.selected_row, self.selected_col)
+            self.canvas.create_oval(x-25, y-25, x+25, y+25, fill='', outline='#2ecc71', width=4)
