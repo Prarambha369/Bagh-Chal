@@ -125,6 +125,14 @@
 </head>
 <body>
 <div class="title">🐅 Bagh-Chal: Tiger and Goats 🐐</div>
+<div style="margin-bottom:10px;">
+  <label for="modeSelect"><b>Mode:</b></label>
+  <select id="modeSelect" onchange="changeMode()">
+    <option value="human">Human vs Human</option>
+    <option value="botTiger">Human vs Bot (Bot=Tigers)</option>
+    <option value="botGoat">Human vs Bot (Bot=Goats)</option>
+  </select>
+</div>
 
 <div class="status-panel">
     <div id="status">Loading game...</div>
@@ -211,9 +219,21 @@
     let winner = null;
     let connections = {};
 
+    // Bot mode variables
+    let botTiger = false;
+    let botGoat = false;
+
+    function changeMode() {
+      const mode = document.getElementById('modeSelect').value;
+      botTiger = (mode === 'botTiger');
+      botGoat = (mode === 'botGoat');
+      resetGame();
+    }
+
     // Canvas setup
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
+
     // Initialize game
     function initGame() {
         setupConnections();
@@ -239,6 +259,7 @@
             }
         }
     }
+
     function resetGame() {
         currentPhase = PLACEMENT_PHASE;
         currentPlayer = GOAT_PLAYER;
@@ -276,6 +297,7 @@
         }
         return [null, null];
     }
+
     function drawBoard() {
         ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
 
@@ -303,6 +325,7 @@
                 }
             }
         }
+
         // Draw intersection points
         for (let i = 0; i < BOARD_SIZE; i++) {
             for (let j = 0; j < BOARD_SIZE; j++) {
@@ -319,7 +342,9 @@
 
         // Draw pieces
         drawPieces();
-    } function drawPieces() {
+    }
+
+    function drawPieces() {
         for (let i = 0; i < BOARD_SIZE; i++) {
             for (let j = 0; j < BOARD_SIZE; j++) {
                 const [x, y] = getCanvasCoords(i, j);
@@ -357,6 +382,7 @@
                 }
             }
         }
+
         // Highlight selected piece
         if (pieceSelected) {
             const [x, y] = getCanvasCoords(selectedRow, selectedCol);
@@ -400,6 +426,7 @@
 
         return false;
     }
+
     function makeMove(fromRow, fromCol, toRow, toCol) {
         const piece = board[fromRow][fromCol];
         board[fromRow][fromCol] = EMPTY;
@@ -445,6 +472,7 @@
         }
         return false;
     }
+
     function checkWinCondition() {
         if (goatsCaptured >= 5) {
             gameOver = true;
@@ -457,7 +485,7 @@
         }
     }
 
-    function onCanvasClick(event) {
+    const origOnCanvasClick = function(event) {
         if (gameOver) return;
 
         const rect = canvas.getBoundingClientRect();
@@ -525,7 +553,87 @@
         drawBoard();
         updateStatus();
         checkWinCondition();
+    };
+
+    function onCanvasClick(event) {
+      if ((currentPhase === PLACEMENT_PHASE && currentPlayer === GOAT_PLAYER && botGoat) ||
+          (currentPhase === MOVEMENT_PHASE && ((currentPlayer === TIGER_PLAYER && botTiger) || (currentPlayer === GOAT_PLAYER && botGoat)))) {
+        return; // block human input during bot turn
+      }
+      origOnCanvasClick(event);
+      setTimeout(botMoveIfNeeded, 300);
+    };
+
+    function botMoveIfNeeded() {
+      if (gameOver) return;
+      // Placement phase, goat bot
+      if (currentPhase === PLACEMENT_PHASE && currentPlayer === GOAT_PLAYER && botGoat && goatsPlaced < 20) {
+        let empties = [];
+        for (let i = 0; i < BOARD_SIZE; i++)
+          for (let j = 0; j < BOARD_SIZE; j++)
+            if (board[i][j] === EMPTY) empties.push([i, j]);
+        if (empties.length > 0) {
+          const [row, col] = empties[Math.floor(Math.random() * empties.length)];
+          board[row][col] = GOAT;
+          goatsPlaced++;
+          if (goatsPlaced === 20) currentPhase = MOVEMENT_PHASE;
+          currentPlayer = TIGER_PLAYER;
+          drawBoard();
+          updateStatus();
+          checkWinCondition();
+          setTimeout(botMoveIfNeeded, 300);
+        }
+      } else if (currentPhase === MOVEMENT_PHASE) {
+        const botSide = (currentPlayer === TIGER_PLAYER && botTiger) || (currentPlayer === GOAT_PLAYER && botGoat);
+        if (botSide) {
+          let moves = [];
+          for (let i = 0; i < BOARD_SIZE; i++) {
+            for (let j = 0; j < BOARD_SIZE; j++) {
+              if ((currentPlayer === TIGER_PLAYER && board[i][j] === TIGER) || (currentPlayer === GOAT_PLAYER && board[i][j] === GOAT)) {
+                // Normal moves
+                const neighbors = connections[`${i},${j}`];
+                for (const [ni, nj] of neighbors) {
+                  if (isValidMove(i, j, ni, nj)) moves.push([i, j, ni, nj]);
+                }
+                // Tiger jumps
+                if (currentPlayer === TIGER_PLAYER) {
+                  for (let di = -2; di <= 2; di++) {
+                    for (let dj = -2; dj <= 2; dj++) {
+                      if (di === 0 && dj === 0) continue;
+                      const ni = i + di, nj = j + dj;
+                      if (ni >= 0 && ni < BOARD_SIZE && nj >= 0 && nj < BOARD_SIZE) {
+                        if (isValidMove(i, j, ni, nj)) moves.push([i, j, ni, nj]);
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+          if (moves.length > 0) {
+            const [fr, fc, tr, tc] = moves[Math.floor(Math.random() * moves.length)];
+            makeMove(fr, fc, tr, tc);
+            currentPlayer = 1 - currentPlayer;
+            drawBoard();
+            updateStatus();
+            checkWinCondition();
+            setTimeout(botMoveIfNeeded, 300);
+          }
+        }
+      }
     }
+
+    const origResetGame = resetGame;
+    resetGame = function() {
+      origResetGame();
+      setTimeout(botMoveIfNeeded, 300);
+    };
+
+    window.addEventListener('load', function() {
+      changeMode();
+      initGame();
+    });
+
     function updateStatus() {
         let statusText, instructionText;
 
@@ -564,9 +672,6 @@
     function closeRules() {
         document.getElementById('rulesModal').style.display = 'none';
     }
-
-    // Initialize game when page loads
-    window.addEventListener('load', initGame);
 
     // Close modal when clicking outside
     window.addEventListener('click', function(event) {
