@@ -360,3 +360,4 @@ MOVEMENT RULES:
 
 WIN CONDITIONS:
 • Tigers win by capturing 5 goats
+ • Goats win by blocking all tigers from moving
