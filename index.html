@@ -548,3 +548,28 @@
                 }
             }
         }
+        document.getElementById('status').textContent = statusText;
+        document.getElementById('instructions').innerHTML = `${instructionText}<br>Goats captured: ${goatsCaptured}/5`;
+    }
+
+    function showRules() {
+        document.getElementById('rulesModal').style.display = 'block';
+    }
+
+    function closeRules() {
+        document.getElementById('rulesModal').style.display = 'none';
+    }
+
+    // Initialize game when page loads
+    window.addEventListener('load', initGame);
+
+    // Close modal when clicking outside
+    window.addEventListener('click', function(event) {
+        const modal = document.getElementById('rulesModal');
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+</script>
+</body>
+</html>
