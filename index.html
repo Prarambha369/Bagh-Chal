@@ -440,3 +440,47 @@
         }
         return false;
     }
+    function checkWinCondition() {
+        if (goatsCaptured >= 5) {
+            gameOver = true;
+            winner = "Tigers";
+            alert("🐅 Tigers Win! They captured 5 goats!");
+        } else if (currentPhase === MOVEMENT_PHASE && !canTigersMove()) {
+            gameOver = true;
+            winner = "Goats";
+            alert("🐐 Goats Win! All tigers are blocked!");
+        }
+    }
+
+    function onCanvasClick(event) {
+        if (gameOver) return;
+
+        const rect = canvas.getBoundingClientRect();
+        const canvasX = event.clientX - rect.left;
+        const canvasY = event.clientY - rect.top;
+        const [row, col] = getBoardCoords(canvasX, canvasY);
+
+        if (row === null || col === null) return;
+
+        if (currentPhase === PLACEMENT_PHASE && currentPlayer === GOAT_PLAYER) {
+            // Place goat
+            if (board[row][col] === EMPTY && goatsPlaced < 20) {
+                board[row][col] = GOAT;
+                goatsPlaced++;
+
+                if (goatsPlaced === 20) {
+                    currentPhase = MOVEMENT_PHASE;
+                }
+
+                currentPlayer = TIGER_PLAYER;
+            }
+        } else {
+            // Movement phase or tiger turn
+            if (!pieceSelected) {
+                // Select piece
+                if ((currentPlayer === TIGER_PLAYER && board[row][col] === TIGER) ||
+                    (currentPlayer === GOAT_PLAYER && board[row][col] === GOAT)) {
+                    selectedRow = row;
+                    selectedCol = col;
+                    pieceSelected = true;
+                }
