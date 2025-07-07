@@ -300,3 +300,26 @@ else:
         self.draw_board()
         self.update_status()
         self.check_win_condition()
+def update_status(self):
+    """Update status labels"""
+    if self.game_over:
+        status_text = f"Game Over! Winner: {self.winner}"
+    else:
+        phase_text = "Placement Phase" if self.current_phase == self.PLACEMENT_PHASE else "Movement Phase"
+        player_text = "Tigers" if self.current_player == self.TIGER_PLAYER else "Goats"
+        status_text = f"{phase_text} - Current Player: {player_text}"
+
+    self.status_label.config(text=status_text)
+
+    # Update instructions
+    if self.game_over:
+        instruction_text = f"🎉 {self.winner} have won the game! Click 'Restart Game' to play again."
+    elif self.current_phase == self.PLACEMENT_PHASE:
+        instruction_text = f"🐐 Place goats on empty intersections. Goats placed: {self.goats_placed}/20"
+    elif self.current_player == self.TIGER_PLAYER:
+        if self.piece_selected:
+            instruction_text = "🐅 Tiger selected! Click on an empty adjacent position or jump over a goat to capture it."
+        else:
+            instruction_text = "🐅 Tigers' turn! Click on a tiger to select it."
+    else:
+        if self.piece_selected:
