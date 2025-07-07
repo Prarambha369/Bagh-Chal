@@ -323,3 +323,14 @@ def update_status(self):
             instruction_text = "🐅 Tigers' turn! Click on a tiger to select it."
     else:
         if self.piece_selected:
+            instruction_text = "🐐 Goat selected! Click on an empty adjacent position to move."
+        else:
+            instruction_text = "🐐 Goats' turn! Click on a goat to select it."
+
+        additional_info = f"Goats captured: {self.goats_captured}/5"
+        self.instruction_label.config(text=f"{instruction_text}\n{additional_info}")
+
+    def show_rules(self):
+        """Display game rules"""
+        rules_text = """
+🐅 BAGH-CHAL RULES 🐐
