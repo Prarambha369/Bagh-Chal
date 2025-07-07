@@ -352,3 +352,46 @@
                 }
             }
         }
+        // Highlight selected piece
+        if (pieceSelected) {
+            const [x, y] = getCanvasCoords(selectedRow, selectedCol);
+            ctx.strokeStyle = '#2ecc71';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(x, y, 25, 0, 2 * Math.PI);
+            ctx.stroke();
+        }
+    }
+
+    function isValidMove(fromRow, fromCol, toRow, toCol) {
+        if (board[toRow][toCol] !== EMPTY) {
+            return false;
+        }
+
+        // Check direct move (adjacent)
+        const neighbors = connections[`${fromRow},${fromCol}`];
+        for (const [nr, nc] of neighbors) {
+            if (nr === toRow && nc === toCol) {
+                return true;
+            }
+        }
+
+        // Check tiger jump (capture)
+        if (board[fromRow][fromCol] === TIGER) {
+            if (Math.abs(toRow - fromRow) === 2 && Math.abs(toCol - fromCol) <= 2) {
+                const midRow = Math.floor((fromRow + toRow) / 2);
+                const midCol = Math.floor((fromCol + toCol) / 2);
+                if (board[midRow][midCol] === GOAT) {
+                    return true;
+                }
+            } else if (Math.abs(toCol - fromCol) === 2 && Math.abs(toRow - fromRow) <= 2) {
+                const midRow = Math.floor((fromRow + toRow) / 2);
+                const midCol = Math.floor((fromCol + toCol) / 2);
+                if (board[midRow][midCol] === GOAT) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
