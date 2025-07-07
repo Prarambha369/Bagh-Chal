@@ -521,3 +521,30 @@
         updateStatus();
         checkWinCondition();
     }
+    function updateStatus() {
+        let statusText, instructionText;
+
+        if (gameOver) {
+            statusText = `Game Over! Winner: ${winner}`;
+            instructionText = `🎉 ${winner} have won the game! Click 'Restart Game' to play again.`;
+        } else {
+            const phaseText = currentPhase === PLACEMENT_PHASE ? "Placement Phase" : "Movement Phase";
+            const playerText = currentPlayer === TIGER_PLAYER ? "Tigers" : "Goats";
+            statusText = `${phaseText} - Current Player: ${playerText}`;
+
+            if (currentPhase === PLACEMENT_PHASE) {
+                instructionText = `🐐 Place goats on empty intersections. Goats placed: ${goatsPlaced}/20`;
+            } else if (currentPlayer === TIGER_PLAYER) {
+                if (pieceSelected) {
+                    instructionText = "🐅 Tiger selected! Click on an empty adjacent position or jump over a goat to capture it.";
+                } else {
+                    instructionText = "🐅 Tigers' turn! Click on a tiger to select it.";
+                }
+            } else {
+                if (pieceSelected) {
+                    instructionText = "🐐 Goat selected! Click on an empty adjacent position to move.";
+                } else {
+                    instructionText = "🐐 Goats' turn! Click on a goat to select it.";
+                }
+            }
+        }
