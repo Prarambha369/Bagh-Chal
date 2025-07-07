@@ -209,4 +209,52 @@ def make_move(self, from_row, from_col, to_row, to_col):
         if self.board[mid_row][mid_col] == self.GOAT:
             self.board[mid_row][mid_col] = self.EMPTY
             self.goats_captured += 1
-            
+            def can_tigers_move(self):
+    """Check if any tiger can move"""
+    for i in range(self.BOARD_SIZE):
+        for j in range(self.BOARD_SIZE):
+            if self.board[i][j] == self.TIGER:
+                # Check all possible moves
+                for ni, nj in self.connections[(i, j)]:
+                    if self.is_valid_move(i, j, ni, nj):
+                        return True
+                # Check jump moves
+                for di in [-2, -1, 0, 1, 2]:
+                    for dj in [-2, -1, 0, 1, 2]:
+                        if di == 0 and dj == 0:
+                            continue
+                        ni, nj = i + di, j + dj
+                        if 0 <= ni < self.BOARD_SIZE and 0 <= nj < self.BOARD_SIZE:
+                            if self.is_valid_move(i, j, ni, nj):
+                                return True
+    return False
+def check_win_condition(self):
+    """Check if game is over"""
+    if self.goats_captured >= 5:
+        self.game_over = True
+        self.winner = "Tigers"
+        messagebox.showinfo("Game Over", "🐅 Tigers Win! They captured 5 goats!")
+    elif self.current_phase == self.MOVEMENT_PHASE and not self.can_tigers_move():
+        self.game_over = True
+        self.winner = "Goats"
+        messagebox.showinfo("Game Over", "🐐 Goats Win! All tigers are blocked!")
+
+def on_canvas_click(self, event):
+    """Handle canvas clicks"""
+    if self.game_over:
+        return
+
+    row, col = self.get_board_coords(event.x, event.y)
+    if row is None or col is None:
+        return
+
+    if self.current_phase == self.PLACEMENT_PHASE and self.current_player == self.GOAT_PLAYER:
+        # Place goat
+        if self.board[row][col] == self.EMPTY and self.goats_placed < 20:
+            self.board[row][col] = self.GOAT
+            self.goats_placed += 1
+
+            if self.goats_placed == 20:
+                self.current_phase = self.MOVEMENT_PHASE
+
+            self.current_player = self.TIGER_PLAYER
