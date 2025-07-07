@@ -1,9 +1,13 @@
 import tkinter as tk
 from tkinter import messagebox
 import math
+import random
 
 class BaghChalTkinter:
     def __init__(self):
+        self.bot_tiger = False
+        self.bot_goat = False
+        self.ask_bot_mode()
         self.root = tk.Tk()
         self.root.title("Bagh-Chal: Tiger and Goats")
         self.root.geometry("700x600")
@@ -244,7 +248,6 @@ class BaghChalTkinter:
             messagebox.showinfo("Game Over", "🐐 Goats Win! All tigers are blocked!")
 
     def on_canvas_click(self, event):
-        """Handle canvas clicks"""
         if self.game_over:
             return
 
@@ -253,8 +256,9 @@ class BaghChalTkinter:
             return
 
         if self.current_phase == self.PLACEMENT_PHASE and self.current_player == self.GOAT_PLAYER:
-            # Place goat
             if self.board[row][col] == self.EMPTY and self.goats_placed < 20:
+                if self.bot_goat:
+                    return  # Bot will play
                 self.board[row][col] = self.GOAT
                 self.goats_placed += 1
 
@@ -263,39 +267,33 @@ class BaghChalTkinter:
 
                 self.current_player = self.TIGER_PLAYER
         else:
-            # Movement phase or tiger turn
             if not self.piece_selected:
-                # Select piece
                 if ((self.current_player == self.TIGER_PLAYER and self.board[row][col] == self.TIGER) or
                         (self.current_player == self.GOAT_PLAYER and self.board[row][col] == self.GOAT)):
+                    if (self.current_player == self.TIGER_PLAYER and self.bot_tiger) or (self.current_player == self.GOAT_PLAYER and self.bot_goat):
+                        return  # Bot will play
                     self.selected_row = row
                     self.selected_col = col
                     self.piece_selected = True
             else:
-                # Move piece
                 if row == self.selected_row and col == self.selected_col:
-                    # Deselect if clicking same piece
                     self.piece_selected = False
                     self.selected_row = -1
                     self.selected_col = -1
                 elif self.is_valid_move(self.selected_row, self.selected_col, row, col):
-                    # Valid move
                     self.make_move(self.selected_row, self.selected_col, row, col)
                     self.piece_selected = False
                     self.selected_row = -1
                     self.selected_col = -1
 
-                    # Switch player
                     self.current_player = 1 - self.current_player
                 else:
-                    # Invalid move - try to select new piece if it belongs to current player
                     if ((self.current_player == self.TIGER_PLAYER and self.board[row][col] == self.TIGER) or
                             (self.current_player == self.GOAT_PLAYER and self.board[row][col] == self.GOAT)):
                         self.selected_row = row
                         self.selected_col = col
                         self.piece_selected = True
                     else:
-                        # Invalid selection, deselect current piece
                         self.piece_selected = False
                         self.selected_row = -1
                         self.selected_col = -1
@@ -303,6 +301,52 @@ class BaghChalTkinter:
         self.draw_board()
         self.update_status()
         self.check_win_condition()
+        self.root.after(300, self.bot_move_if_needed)
+
+    def bot_move_if_needed(self):
+        if self.game_over:
+            return
+        if self.current_phase == self.PLACEMENT_PHASE and self.current_player == self.GOAT_PLAYER and self.bot_goat and self.goats_placed < 20:
+            empties = [(i, j) for i in range(self.BOARD_SIZE) for j in range(self.BOARD_SIZE) if self.board[i][j] == self.EMPTY]
+            if empties:
+                row, col = random.choice(empties)
+                self.board[row][col] = self.GOAT
+                self.goats_placed += 1
+                if self.goats_placed == 20:
+                    self.current_phase = self.MOVEMENT_PHASE
+                self.current_player = self.TIGER_PLAYER
+                self.draw_board()
+                self.update_status()
+                self.check_win_condition()
+                self.root.after(300, self.bot_move_if_needed)
+        elif self.current_phase == self.MOVEMENT_PHASE:
+            bot_side = (self.current_player == self.TIGER_PLAYER and self.bot_tiger) or (self.current_player == self.GOAT_PLAYER and self.bot_goat)
+            if bot_side:
+                moves = []
+                for i in range(self.BOARD_SIZE):
+                    for j in range(self.BOARD_SIZE):
+                        if (self.current_player == self.TIGER_PLAYER and self.board[i][j] == self.TIGER) or (self.current_player == self.GOAT_PLAYER and self.board[i][j] == self.GOAT):
+                            for ni, nj in self.connections[(i, j)]:
+                                if self.is_valid_move(i, j, ni, nj):
+                                    moves.append((i, j, ni, nj))
+                            # Tiger jumps
+                            if self.current_player == self.TIGER_PLAYER:
+                                for di in [-2, -1, 0, 1, 2]:
+                                    for dj in [-2, -1, 0, 1, 2]:
+                                        if di == 0 and dj == 0:
+                                            continue
+                                        ni, nj = i + di, j + dj
+                                        if 0 <= ni < self.BOARD_SIZE and 0 <= nj < self.BOARD_SIZE:
+                                            if self.is_valid_move(i, j, ni, nj):
+                                                moves.append((i, j, ni, nj))
+                if moves:
+                    fr, fc, tr, tc = random.choice(moves)
+                    self.make_move(fr, fc, tr, tc)
+                    self.current_player = 1 - self.current_player
+                    self.draw_board()
+                    self.update_status()
+                    self.check_win_condition()
+                    self.root.after(300, self.bot_move_if_needed)
 
     def update_status(self):
         """Update status labels"""
@@ -367,6 +411,20 @@ WIN CONDITIONS:
  • Goats win by blocking all tigers from moving
           """
         messagebox.showinfo("Bagh-Chal Rules", rules_text)
+
+    def ask_bot_mode(self):
+        import tkinter.simpledialog as sd
+        root = tk.Tk()
+        root.withdraw()
+        mode = sd.askstring(
+            "Choose Mode",
+            "1: Human vs Human\n2: Human vs Bot (Bot=Tigers)\n3: Human vs Bot (Bot=Goats)\nEnter 1, 2, or 3:",
+        )
+        if mode == '2':
+            self.bot_tiger = True
+        elif mode == '3':
+            self.bot_goat = True
+        root.destroy()
 
     def run(self):
         """Start the game"""
