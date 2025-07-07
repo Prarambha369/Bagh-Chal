@@ -34,11 +34,11 @@
         }
 
         .game-board {
-            background: #34495e;
-            border: 3px solid #ecf0f1;
+            background: #e8c27a; /* parchment/yellowish-brown */
+            box-shadow: 0 8px 24px rgba(90,58,27,0.15);
+            border: 3px solid #5a3a1b;
             border-radius: 10px;
             cursor: pointer;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
 
         .controls {
@@ -279,9 +279,13 @@
     function drawBoard() {
         ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
 
+        // Board background
+        ctx.fillStyle = '#e8c27a'; // parchment
+        ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
         // Draw grid lines
-        ctx.strokeStyle = '#ecf0f1';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#5a3a1b'; // dark brown
+        ctx.lineWidth = 2.5;
 
         for (let i = 0; i < BOARD_SIZE; i++) {
             for (let j = 0; j < BOARD_SIZE; j++) {
@@ -303,11 +307,12 @@
         for (let i = 0; i < BOARD_SIZE; i++) {
             for (let j = 0; j < BOARD_SIZE; j++) {
                 const [x, y] = getCanvasCoords(i, j);
-                ctx.fillStyle = '#ecf0f1';
+                ctx.fillStyle = '#ad8a56'; // brownish
                 ctx.beginPath();
-                ctx.arc(x, y, 4, 0, 2 * Math.PI);
+                ctx.arc(x, y, 5, 0, 2 * Math.PI);
                 ctx.fill();
-                ctx.strokeStyle = '#bdc3c7';
+                ctx.strokeStyle = '#5a3a1b';
+                ctx.lineWidth = 1.5;
                 ctx.stroke();
             }
         }
@@ -321,34 +326,34 @@
 
                 if (board[i][j] === TIGER) {
                     // Draw tiger
-                    ctx.fillStyle = '#ff6b35';
-                    ctx.strokeStyle = '#d35400';
+                    ctx.fillStyle = '#c97a3a'; // ochre/orange
+                    ctx.strokeStyle = '#5a3a1b'; // dark brown
                     ctx.lineWidth = 3;
                     ctx.beginPath();
                     ctx.arc(x, y, 20, 0, 2 * Math.PI);
                     ctx.fill();
                     ctx.stroke();
 
-                    // Tiger emoji
+                    // Tiger emoji (optional, can remove for classic look)
                     ctx.font = '16px Arial';
-                    ctx.fillStyle = 'white';
+                    ctx.fillStyle = '#5a3a1b';
                     ctx.textAlign = 'center';
-                    ctx.fillText('🐅', x, y + 5);
+                    ctx.fillText('🐅', x, y + 6);
                 } else if (board[i][j] === GOAT) {
                     // Draw goat
-                    ctx.fillStyle = '#ecf0f1';
-                    ctx.strokeStyle = '#95a5a6';
-                    ctx.lineWidth = 2;
+                    ctx.fillStyle = '#f5f3e7'; // off-white
+                    ctx.strokeStyle = '#5a3a1b'; // dark brown
+                    ctx.lineWidth = 3;
                     ctx.beginPath();
-                    ctx.arc(x, y, 15, 0, 2 * Math.PI);
+                    ctx.arc(x, y, 20, 0, 2 * Math.PI);
                     ctx.fill();
                     ctx.stroke();
 
-                    // Goat emoji
-                    ctx.font = '12px Arial';
-                    ctx.fillStyle = 'black';
+                    // Goat emoji (optional, can remove for classic look)
+                    ctx.font = '16px Arial';
+                    ctx.fillStyle = '#ad8a56';
                     ctx.textAlign = 'center';
-                    ctx.fillText('🐐', x, y + 4);
+                    ctx.fillText('🐐', x, y + 6);
                 }
             }
         }
