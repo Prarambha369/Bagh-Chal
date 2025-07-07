@@ -334,3 +334,29 @@ def update_status(self):
         """Display game rules"""
         rules_text = """
 🐅 BAGH-CHAL RULES 🐐
+OBJECTIVE:
+• Tigers: Capture 5 goats to win
+• Goats: Block all tigers so they cannot move
+
+SETUP:
+• 4 tigers start at the corners
+• 20 goats to be placed during the game
+
+GAMEPLAY:
+1. PLACEMENT PHASE:
+   • Goats are placed one by one on empty intersections
+   • After each goat placement, tigers can move
+
+2. MOVEMENT PHASE (after all 20 goats are placed):
+   • Both tigers and goats can move to adjacent empty positions
+   • Tigers can also jump over goats to capture them
+   • Only one piece can be moved per turn
+
+MOVEMENT RULES:
+• All pieces move along the lines to adjacent intersections
+• Tigers can jump over adjacent goats to capture them
+• Captured goats are removed from the board
+• Goats cannot jump or capture
+
+WIN CONDITIONS:
+• Tigers win by capturing 5 goats
