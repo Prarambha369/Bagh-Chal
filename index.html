@@ -395,3 +395,48 @@
 
         return false;
     }
+    function makeMove(fromRow, fromCol, toRow, toCol) {
+        const piece = board[fromRow][fromCol];
+        board[fromRow][fromCol] = EMPTY;
+        board[toRow][toCol] = piece;
+
+        // Check for capture
+        if (piece === TIGER && (Math.abs(toRow - fromRow) === 2 || Math.abs(toCol - fromCol) === 2)) {
+            const midRow = Math.floor((fromRow + toRow) / 2);
+            const midCol = Math.floor((fromCol + toCol) / 2);
+            if (board[midRow][midCol] === GOAT) {
+                board[midRow][midCol] = EMPTY;
+                goatsCaptured++;
+            }
+        }
+    }
+
+    function canTigersMove() {
+        for (let i = 0; i < BOARD_SIZE; i++) {
+            for (let j = 0; j < BOARD_SIZE; j++) {
+                if (board[i][j] === TIGER) {
+                    // Check all possible moves
+                    const neighbors = connections[`${i},${j}`];
+                    for (const [ni, nj] of neighbors) {
+                        if (isValidMove(i, j, ni, nj)) {
+                            return true;
+                        }
+                    }
+                    // Check jump moves
+                    for (let di = -2; di <= 2; di++) {
+                        for (let dj = -2; dj <= 2; dj++) {
+                            if (di === 0 && dj === 0) continue;
+                            const ni = i + di;
+                            const nj = j + dj;
+                            if (ni >= 0 && ni < BOARD_SIZE && nj >= 0 && nj < BOARD_SIZE) {
+                                if (isValidMove(i, j, ni, nj)) {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
