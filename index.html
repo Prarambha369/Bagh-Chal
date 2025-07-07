@@ -146,7 +146,7 @@
 </div>
 
 <div class="instructions" id="instructions">
-    Click to start playing!
+    <button id="startBtn" class="btn btn-restart" style="font-size:18px; padding:18px 32px;">▶️ Start Game</button>
 </div>
 
 <!-- Rules Modal -->
@@ -222,6 +222,8 @@
     // Bot mode variables
     let botTiger = false;
     let botGoat = false;
+
+    let gameStarted = false;
 
     function changeMode() {
       const mode = document.getElementById('modeSelect').value;
@@ -485,82 +487,60 @@
         }
     }
 
-    const origOnCanvasClick = function(event) {
-        if (gameOver) return;
-
-        const rect = canvas.getBoundingClientRect();
-        const canvasX = event.clientX - rect.left;
-        const canvasY = event.clientY - rect.top;
-        const [row, col] = getBoardCoords(canvasX, canvasY);
-
-        if (row === null || col === null) return;
-
-        if (currentPhase === PLACEMENT_PHASE && currentPlayer === GOAT_PLAYER) {
-            // Place goat
-            if (board[row][col] === EMPTY && goatsPlaced < 20) {
-                board[row][col] = GOAT;
-                goatsPlaced++;
-
-                if (goatsPlaced === 20) {
-                    currentPhase = MOVEMENT_PHASE;
-                }
-
-                currentPlayer = TIGER_PLAYER;
-            }
-        } else {
-            // Movement phase or tiger turn
-            if (!pieceSelected) {
-                // Select piece
-                if ((currentPlayer === TIGER_PLAYER && board[row][col] === TIGER) ||
-                    (currentPlayer === GOAT_PLAYER && board[row][col] === GOAT)) {
-                    selectedRow = row;
-                    selectedCol = col;
-                    pieceSelected = true;
-                }
-            } else {
-                // Move piece
-                if (row === selectedRow && col === selectedCol) {
-                    // Deselect if clicking same piece
-                    pieceSelected = false;
-                    selectedRow = -1;
-                    selectedCol = -1;
-                } else if (isValidMove(selectedRow, selectedCol, row, col)) {
-                    // Valid move
-                    makeMove(selectedRow, selectedCol, row, col);
-                    pieceSelected = false;
-                    selectedRow = -1;
-                    selectedCol = -1;
-
-                    // Switch player
-                    currentPlayer = 1 - currentPlayer;
-                } else {
-                    // Invalid move - try to select new piece
-                    if ((currentPlayer === TIGER_PLAYER && board[row][col] === TIGER) ||
-                        (currentPlayer === GOAT_PLAYER && board[row][col] === GOAT)) {
-                        selectedRow = row;
-                        selectedCol = col;
-                        pieceSelected = true;
-                    } else {
-                        // Invalid selection, deselect current piece
-                        pieceSelected = false;
-                        selectedRow = -1;
-                        selectedCol = -1;
-                    }
-                }
-            }
-        }
-
-        drawBoard();
-        updateStatus();
-        checkWinCondition();
-    };
-
     function onCanvasClick(event) {
+      if (!gameStarted) return;
       if ((currentPhase === PLACEMENT_PHASE && currentPlayer === GOAT_PLAYER && botGoat) ||
           (currentPhase === MOVEMENT_PHASE && ((currentPlayer === TIGER_PLAYER && botTiger) || (currentPlayer === GOAT_PLAYER && botGoat)))) {
         return; // block human input during bot turn
       }
-      origOnCanvasClick(event);
+      const rect = canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      const [row, col] = getBoardCoords(x, y);
+      if (row === null || col === null) return;
+      if (currentPhase === PLACEMENT_PHASE && currentPlayer === GOAT_PLAYER) {
+        if (board[row][col] === EMPTY && goatsPlaced < 20) {
+          board[row][col] = GOAT;
+          goatsPlaced++;
+          if (goatsPlaced === 20) currentPhase = MOVEMENT_PHASE;
+          currentPlayer = TIGER_PLAYER;
+        }
+      } else {
+        if (!pieceSelected) {
+          if ((currentPlayer === TIGER_PLAYER && board[row][col] === TIGER) ||
+              (currentPlayer === GOAT_PLAYER && board[row][col] === GOAT)) {
+            selectedRow = row;
+            selectedCol = col;
+            pieceSelected = true;
+          }
+        } else {
+          if (row === selectedRow && col === selectedCol) {
+            pieceSelected = false;
+            selectedRow = -1;
+            selectedCol = -1;
+          } else if (isValidMove(selectedRow, selectedCol, row, col)) {
+            makeMove(selectedRow, selectedCol, row, col);
+            pieceSelected = false;
+            selectedRow = -1;
+            selectedCol = -1;
+            currentPlayer = 1 - currentPlayer;
+          } else {
+            if ((currentPlayer === TIGER_PLAYER && board[row][col] === TIGER) ||
+                (currentPlayer === GOAT_PLAYER && board[row][col] === GOAT)) {
+              selectedRow = row;
+              selectedCol = col;
+              pieceSelected = true;
+            } else {
+              pieceSelected = false;
+              selectedRow = -1;
+              selectedCol = -1;
+            }
+          }
+        }
+      }
+      drawBoard();
+      updateStatus();
+      checkWinCondition();
       setTimeout(botMoveIfNeeded, 300);
     };
 
@@ -625,14 +605,29 @@
 
     const origResetGame = resetGame;
     resetGame = function() {
+      gameStarted = false;
+      document.getElementById('instructions').style.display = '';
+      enableControls(false);
       origResetGame();
-      setTimeout(botMoveIfNeeded, 300);
     };
 
-    window.addEventListener('load', function() {
-      changeMode();
-      initGame();
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('startBtn').addEventListener('click', function() {
+        gameStarted = true;
+        document.getElementById('instructions').style.display = 'none';
+        enableControls(true);
+        drawBoard();
+        updateStatus();
+        checkWinCondition();
+      });
+      enableControls(false);
     });
+
+    function enableControls(enable) {
+      document.getElementById('gameCanvas').style.pointerEvents = enable ? 'auto' : 'none';
+      document.querySelectorAll('.btn').forEach(btn => btn.disabled = !enable);
+      document.getElementById('modeSelect').disabled = false; // Mode selector should always be enabled
+    }
 
     function updateStatus() {
         let statusText, instructionText;
@@ -679,6 +674,11 @@
         if (event.target === modal) {
             modal.style.display = 'none';
         }
+    });
+
+    window.addEventListener('load', function() {
+      changeMode();
+      initGame();
     });
 </script>
 </body>
