@@ -361,3 +361,14 @@ MOVEMENT RULES:
 WIN CONDITIONS:
 • Tigers win by capturing 5 goats
  • Goats win by blocking all tigers from moving
+          """
+        messagebox.showinfo("Bagh-Chal Rules", rules_text)
+
+    def run(self):
+        """Start the game"""
+        self.root.mainloop()
+
+# Run the game
+if __name__ == "__main__":
+    game = BaghChalTkinter()
+    game.run()
