@@ -259,3 +259,36 @@ def on_canvas_click(self, event):
                 self.current_phase = self.MOVEMENT_PHASE
 
             self.current_player = self.TIGER_PLAYER
+else:
+# Movement phase or tiger turn
+if not self.piece_selected:
+    # Select piece
+    if ((self.current_player == self.TIGER_PLAYER and self.board[row][col] == self.TIGER) or
+            (self.current_player == self.GOAT_PLAYER and self.board[row][col] == self.GOAT)):
+        self.selected_row = row
+        self.selected_col = col
+        self.piece_selected = True
+else:
+    # Move piece
+    if row == self.selected_row and col == self.selected_col:
+        # Deselect if clicking same piece
+        self.piece_selected = False
+        self.selected_row = -1
+        self.selected_col = -1
+    elif self.is_valid_move(self.selected_row, self.selected_col, row, col):
+        # Valid move
+        self.make_move(self.selected_row, self.selected_col, row, col)
+        self.piece_selected = False
+        self.selected_row = -1
+        self.selected_col = -1
+
+        # Switch player
+        self.current_player = 1 - self.current_player
+    else:
+        # Invalid move - try to select new piece if it belongs to current player
+        if ((self.current_player == self.TIGER_PLAYER and self.board[row][col] == self.TIGER) or
+                (self.current_player == self.GOAT_PLAYER and self.board[row][col] == self.GOAT)):
+            self.selected_row = row
+            self.selected_col = col
+            self.piece_selected = True
+        else:
