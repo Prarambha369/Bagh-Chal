@@ -228,6 +228,7 @@ def make_move(self, from_row, from_col, to_row, to_col):
                             if self.is_valid_move(i, j, ni, nj):
                                 return True
     return False
+
 def check_win_condition(self):
     """Check if game is over"""
     if self.goats_captured >= 5:
