@@ -484,3 +484,40 @@
                     selectedCol = col;
                     pieceSelected = true;
                 }
+            } else {
+                // Move piece
+                if (row === selectedRow && col === selectedCol) {
+                    // Deselect if clicking same piece
+                    pieceSelected = false;
+                    selectedRow = -1;
+                    selectedCol = -1;
+                } else if (isValidMove(selectedRow, selectedCol, row, col)) {
+                    // Valid move
+                    makeMove(selectedRow, selectedCol, row, col);
+                    pieceSelected = false;
+                    selectedRow = -1;
+                    selectedCol = -1;
+
+                    // Switch player
+                    currentPlayer = 1 - currentPlayer;
+                } else {
+                    // Invalid move - try to select new piece
+                    if ((currentPlayer === TIGER_PLAYER && board[row][col] === TIGER) ||
+                        (currentPlayer === GOAT_PLAYER && board[row][col] === GOAT)) {
+                        selectedRow = row;
+                        selectedCol = col;
+                        pieceSelected = true;
+                    } else {
+                        // Invalid selection, deselect current piece
+                        pieceSelected = false;
+                        selectedRow = -1;
+                        selectedCol = -1;
+                    }
+                }
+            }
+        }
+
+        drawBoard();
+        updateStatus();
+        checkWinCondition();
+    }
