@@ -292,3 +292,11 @@ else:
             self.selected_col = col
             self.piece_selected = True
         else:
+            # Invalid selection, deselect current piece
+            self.piece_selected = False
+            self.selected_row = -1
+            self.selected_col = -1
+
+        self.draw_board()
+        self.update_status()
+        self.check_win_condition()
