@@ -1,425 +1,177 @@
 import tkinter as tk
 from tkinter import messagebox
-import math
 import random
 
-class BaghChalTkinter:
+class BaghChal:
+    BOARD_SIZE = 5
+    EMPTY, TIGER, GOAT = 0, 1, 2
+    TIGER_PLAYER, GOAT_PLAYER = 0, 1
+    PLACEMENT_PHASE, MOVEMENT_PHASE = 0, 1
+
     def __init__(self):
         self.bot_tiger = False
         self.bot_goat = False
         self.ask_bot_mode()
         self.root = tk.Tk()
-        self.root.title("Bagh-Chal: Tiger and Goats")
-        self.root.geometry("700x600")
-        self.root.configure(bg='#e8c27a')  # parchment background
+        self.root.title("Bagh-Chal")
+        self.canvas_size = 500
+        self.cell_size = self.canvas_size // (self.BOARD_SIZE + 1)
+        self.offset = self.cell_size
 
-        # Game constants
-        self.BOARD_SIZE = 5
-        self.CANVAS_SIZE = 500
-        self.CELL_SIZE = self.CANVAS_SIZE // (self.BOARD_SIZE + 1)
-        self.OFFSET = self.CELL_SIZE
+        self.canvas = tk.Canvas(self.root, width=self.canvas_size, height=self.canvas_size)
+        self.canvas.pack()
+        self.canvas.bind("<Button-1>", self.on_click)
 
-        # Game states
-        self.PLACEMENT_PHASE = 0
-        self.MOVEMENT_PHASE = 1
+        self.status = tk.Label(self.root)
+        self.status.pack()
 
-        # Piece types
-        self.EMPTY = 0
-        self.TIGER = 1
-        self.GOAT = 2
-
-        # Players
-        self.TIGER_PLAYER = 0
-        self.GOAT_PLAYER = 1
-
-        # Initialize game
-        self.setup_ui()
         self.setup_connections()
         self.reset_game()
-
-    def setup_ui(self):
-        """Setup the user interface"""
-        # Title
-        title_label = tk.Label(self.root, text="🐅 Bagh-Chal: Tiger and Goats 🐐",
-                               font=('Arial', 18, 'bold'), bg='#e8c27a', fg='#5a3a1b')
-        title_label.pack(pady=10)
-
-        # Status frame
-        self.status_frame = tk.Frame(self.root, bg='#e8c27a')
-        self.status_frame.pack(pady=5)
-
-        self.status_label = tk.Label(self.status_frame, text="", font=('Arial', 12),
-                                     bg='#e8c27a', fg='#5a3a1b')
-        self.status_label.pack()
-
-        # Canvas for game board
-        self.canvas = tk.Canvas(self.root, width=self.CANVAS_SIZE, height=self.CANVAS_SIZE,
-                                bg='#e8c27a', highlightthickness=2, highlightbackground='#5a3a1b')
-        self.canvas.pack(pady=10)
-        self.canvas.bind("<Button-1>", self.on_canvas_click)
-
-        # Control buttons
-        button_frame = tk.Frame(self.root, bg='#e8c27a')
-        button_frame.pack(pady=10)
-
-        restart_btn = tk.Button(button_frame, text="🔄 Restart Game", command=self.reset_game,
-                                font=('Arial', 12), bg='#c97a3a', fg='white', padx=20, relief=tk.RAISED)
-        restart_btn.pack(side=tk.LEFT, padx=10)
-
-        rules_btn = tk.Button(button_frame, text="📖 Rules", command=self.show_rules,
-                              font=('Arial', 12), bg='#ad8a56', fg='white', padx=20, relief=tk.RAISED)
-        rules_btn.pack(side=tk.LEFT, padx=10)
-
-        quit_btn = tk.Button(button_frame, text="❌ Quit", command=self.root.quit,
-                             font=('Arial', 12), bg='#e74c3c', fg='white', padx=20, relief=tk.RAISED)
-        quit_btn.pack(side=tk.LEFT, padx=10)
-
-        # Instructions
-        self.instruction_label = tk.Label(self.root, text="", font=('Arial', 10),
-                                          bg='#e8c27a', fg='#c97a3a', wraplength=600)
-        self.instruction_label.pack(pady=5)
+        self.root.after(300, self.bot_move_if_needed)
 
     def setup_connections(self):
-        """Setup valid connections between board positions"""
         self.connections = {}
         for i in range(self.BOARD_SIZE):
             for j in range(self.BOARD_SIZE):
-                neighbors = []
-
-                # All 8 directions (horizontal, vertical, diagonal)
-                directions = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
-                for di, dj in directions:
-                    ni, nj = i + di, j + dj
-                    if 0 <= ni < self.BOARD_SIZE and 0 <= nj < self.BOARD_SIZE:
-                        neighbors.append((ni, nj))
-
-                self.connections[(i, j)] = neighbors
+                self.connections[(i, j)] = [(i + di, j + dj) for di in [-1, 0, 1] for dj in [-1, 0, 1]
+                                            if (di or dj) and 0 <= i + di < self.BOARD_SIZE and 0 <= j + dj < self.BOARD_SIZE]
 
     def reset_game(self):
-        """Reset the game to initial state"""
-        self.current_phase = self.PLACEMENT_PHASE
-        self.current_player = self.GOAT_PLAYER
-        self.board = [[self.EMPTY for _ in range(self.BOARD_SIZE)] for _ in range(self.BOARD_SIZE)]
+        self.phase = self.PLACEMENT_PHASE
+        self.turn = self.GOAT_PLAYER
+        self.board = [[self.EMPTY]*self.BOARD_SIZE for _ in range(self.BOARD_SIZE)]
         self.goats_placed = 0
         self.goats_captured = 0
-        self.selected_row = -1
-        self.selected_col = -1
-        self.piece_selected = False
+        self.selected = None
         self.game_over = False
-        self.winner = None
 
-        # Place initial tigers at corners
-        self.board[0][0] = self.TIGER
-        self.board[0][4] = self.TIGER
-        self.board[4][0] = self.TIGER
-        self.board[4][4] = self.TIGER
+        for r, c in [(0, 0), (0, 4), (4, 0), (4, 4)]:
+            self.board[r][c] = self.TIGER
 
-        self.draw_board()
-        self.update_status()
+        self.draw()
 
-    def get_canvas_coords(self, row, col):
-        """Convert board coordinates to canvas coordinates"""
-        x = self.OFFSET + col * self.CELL_SIZE
-        y = self.OFFSET + row * self.CELL_SIZE
-        return x, y
-
-    def get_board_coords(self, canvas_x, canvas_y):
-        """Convert canvas coordinates to board coordinates"""
-        col = round((canvas_x - self.OFFSET) / self.CELL_SIZE)
-        row = round((canvas_y - self.OFFSET) / self.CELL_SIZE)
-
-        if 0 <= row < self.BOARD_SIZE and 0 <= col < self.BOARD_SIZE:
-            return row, col
-        return None, None
-
-    def draw_board(self):
-        """Draw the game board"""
+    def draw(self):
         self.canvas.delete("all")
-
-        # Draw grid lines
         for i in range(self.BOARD_SIZE):
             for j in range(self.BOARD_SIZE):
-                x, y = self.get_canvas_coords(i, j)
-
-                # Draw lines to connected positions
+                x, y = self.offset + j * self.cell_size, self.offset + i * self.cell_size
                 for ni, nj in self.connections[(i, j)]:
-                    if ni > i or (ni == i and nj > j):  # Avoid drawing duplicate lines
-                        nx, ny = self.get_canvas_coords(ni, nj)
-                        self.canvas.create_line(x, y, nx, ny, fill='#5a3a1b', width=2)
-
-        # Draw intersection points
-        for i in range(self.BOARD_SIZE):
-            for j in range(self.BOARD_SIZE):
-                x, y = self.get_canvas_coords(i, j)
-                self.canvas.create_oval(x-4, y-4, x+4, y+4, fill='#5a3a1b', outline='#bdc3c7')
-
-        # Draw pieces
-        self.draw_pieces()
-
-    def draw_pieces(self):
-        """Draw tigers and goats on the board"""
-        for i in range(self.BOARD_SIZE):
-            for j in range(self.BOARD_SIZE):
-                x, y = self.get_canvas_coords(i, j)
-
+                    nx, ny = self.offset + nj * self.cell_size, self.offset + ni * self.cell_size
+                    self.canvas.create_line(x, y, nx, ny)
                 if self.board[i][j] == self.TIGER:
-                    # Draw tiger (orange circle with T)
-                    self.canvas.create_oval(x-20, y-20, x+20, y+20, fill='#ff6b35', outline='#d35400', width=3)
-                    self.canvas.create_text(x, y, text='🐅', font=('Arial', 16))
-
+                    self.canvas.create_text(x, y, text="🐅", font=("Arial", 16))
                 elif self.board[i][j] == self.GOAT:
-                    # Draw goat (white circle with G)
-                    self.canvas.create_oval(x-15, y-15, x+15, y+15, fill='#ecf0f1', outline='#95a5a6', width=2)
-                    self.canvas.create_text(x, y, text='🐐', font=('Arial', 12))
+                    self.canvas.create_text(x, y, text="🐐", font=("Arial", 14))
+        self.status.config(text=f"Turn: {'Tiger' if self.turn == self.TIGER_PLAYER else 'Goat'}")
 
-        # Highlight selected piece
-        if self.piece_selected:
-            x, y = self.get_canvas_coords(self.selected_row, self.selected_col)
-            self.canvas.create_oval(x-25, y-25, x+25, y+25, fill='', outline='#2ecc71', width=4)
+    def get_coords(self, x, y):
+        col = round((x - self.offset) / self.cell_size)
+        row = round((y - self.offset) / self.cell_size)
+        return (row, col) if 0 <= row < self.BOARD_SIZE and 0 <= col < self.BOARD_SIZE else (None, None)
 
-    def is_valid_move(self, from_row, from_col, to_row, to_col):
-        """Check if a move is valid"""
-        if self.board[to_row][to_col] != self.EMPTY:
-            return False
-
-        # Check direct move (adjacent)
-        if (to_row, to_col) in self.connections[(from_row, from_col)]:
-            return True
-
-        # Check tiger jump (capture)
-        if self.board[from_row][from_col] == self.TIGER:
-            # Calculate middle position for jump
-            if abs(to_row - from_row) == 2 and abs(to_col - from_col) <= 2:
-                mid_row = (from_row + to_row) // 2
-                mid_col = (from_col + to_col) // 2
-                if self.board[mid_row][mid_col] == self.GOAT:
-                    return True
-            elif abs(to_col - from_col) == 2 and abs(to_row - from_row) <= 2:
-                mid_row = (from_row + to_row) // 2
-                mid_col = (from_col + to_col) // 2
-                if self.board[mid_row][mid_col] == self.GOAT:
-                    return True
-
-        return False
-
-    def make_move(self, from_row, from_col, to_row, to_col):
-        """Execute a move"""
-        piece = self.board[from_row][from_col]
-        self.board[from_row][from_col] = self.EMPTY
-        self.board[to_row][to_col] = piece
-
-        # Check for capture
-        if piece == self.TIGER and (abs(to_row - from_row) == 2 or abs(to_col - from_col) == 2):
-            mid_row = (from_row + to_row) // 2
-            mid_col = (from_col + to_col) // 2
-            if self.board[mid_row][mid_col] == self.GOAT:
-                self.board[mid_row][mid_col] = self.EMPTY
-                self.goats_captured += 1
-
-    def can_tigers_move(self):
-        """Check if any tiger can move"""
-        for i in range(self.BOARD_SIZE):
-            for j in range(self.BOARD_SIZE):
-                if self.board[i][j] == self.TIGER:
-                    # Check all possible moves
-                    for ni, nj in self.connections[(i, j)]:
-                        if self.is_valid_move(i, j, ni, nj):
-                            return True
-                    # Check jump moves
-                    for di in [-2, -1, 0, 1, 2]:
-                        for dj in [-2, -1, 0, 1, 2]:
-                            if di == 0 and dj == 0:
-                                continue
-                            ni, nj = i + di, j + dj
-                            if 0 <= ni < self.BOARD_SIZE and 0 <= nj < self.BOARD_SIZE:
-                                if self.is_valid_move(i, j, ni, nj):
-                                    return True
-        return False
-
-    def check_win_condition(self):
-        """Check if game is over"""
-        if self.goats_captured >= 5:
-            self.game_over = True
-            self.winner = "Tigers"
-            messagebox.showinfo("Game Over", "🐅 Tigers Win! They captured 5 goats!")
-        elif self.current_phase == self.MOVEMENT_PHASE and not self.can_tigers_move():
-            self.game_over = True
-            self.winner = "Goats"
-            messagebox.showinfo("Game Over", "🐐 Goats Win! All tigers are blocked!")
-
-    def on_canvas_click(self, event):
-        if self.game_over:
+    def on_click(self, event):
+        if self.game_over or (self.turn == self.TIGER_PLAYER and self.bot_tiger) or (self.turn == self.GOAT_PLAYER and self.bot_goat):
             return
 
-        row, col = self.get_board_coords(event.x, event.y)
-        if row is None or col is None:
+        row, col = self.get_coords(event.x, event.y)
+        if row is None:
             return
 
-        if self.current_phase == self.PLACEMENT_PHASE and self.current_player == self.GOAT_PLAYER:
-            if self.board[row][col] == self.EMPTY and self.goats_placed < 20:
-                if self.bot_goat:
-                    return  # Bot will play
-                self.board[row][col] = self.GOAT
-                self.goats_placed += 1
+        if self.phase == self.PLACEMENT_PHASE and self.turn == self.GOAT_PLAYER and self.board[row][col] == self.EMPTY:
+            self.board[row][col] = self.GOAT
+            self.goats_placed += 1
+            if self.goats_placed == 20:
+                self.phase = self.MOVEMENT_PHASE
+            self.turn = self.TIGER_PLAYER
+        elif self.selected:
+            sr, sc = self.selected
+            if self.is_valid_move(sr, sc, row, col):
+                self.make_move(sr, sc, row, col)
+                self.turn = 1 - self.turn
+            self.selected = None
+        elif self.board[row][col] in (self.TIGER, self.GOAT) and ((self.turn == self.TIGER_PLAYER and self.board[row][col] == self.TIGER) or (self.turn == self.GOAT_PLAYER and self.board[row][col] == self.GOAT)):
+            self.selected = (row, col)
 
-                if self.goats_placed == 20:
-                    self.current_phase = self.MOVEMENT_PHASE
-
-                self.current_player = self.TIGER_PLAYER
-        else:
-            if not self.piece_selected:
-                if ((self.current_player == self.TIGER_PLAYER and self.board[row][col] == self.TIGER) or
-                        (self.current_player == self.GOAT_PLAYER and self.board[row][col] == self.GOAT)):
-                    if (self.current_player == self.TIGER_PLAYER and self.bot_tiger) or (self.current_player == self.GOAT_PLAYER and self.bot_goat):
-                        return  # Bot will play
-                    self.selected_row = row
-                    self.selected_col = col
-                    self.piece_selected = True
-            else:
-                if row == self.selected_row and col == self.selected_col:
-                    self.piece_selected = False
-                    self.selected_row = -1
-                    self.selected_col = -1
-                elif self.is_valid_move(self.selected_row, self.selected_col, row, col):
-                    self.make_move(self.selected_row, self.selected_col, row, col)
-                    self.piece_selected = False
-                    self.selected_row = -1
-                    self.selected_col = -1
-
-                    self.current_player = 1 - self.current_player
-                else:
-                    if ((self.current_player == self.TIGER_PLAYER and self.board[row][col] == self.TIGER) or
-                            (self.current_player == self.GOAT_PLAYER and self.board[row][col] == self.GOAT)):
-                        self.selected_row = row
-                        self.selected_col = col
-                        self.piece_selected = True
-                    else:
-                        self.piece_selected = False
-                        self.selected_row = -1
-                        self.selected_col = -1
-
-        self.draw_board()
-        self.update_status()
-        self.check_win_condition()
+        self.draw()
+        self.check_win()
         self.root.after(300, self.bot_move_if_needed)
+
+    def is_valid_move(self, fr, fc, tr, tc):
+        if self.board[tr][tc] != self.EMPTY:
+            return False
+        if (tr, tc) in self.connections[(fr, fc)]:
+            return True
+        if self.board[fr][fc] == self.TIGER:
+            mr, mc = (fr + tr) // 2, (fc + tc) // 2
+            if abs(fr - tr) == 2 or abs(fc - tc) == 2:
+                return self.board[mr][mc] == self.GOAT
+        return False
+
+    def make_move(self, fr, fc, tr, tc):
+        if self.board[fr][fc] == self.TIGER and abs(fr - tr) == 2 or abs(fc - tc) == 2:
+            mr, mc = (fr + tr) // 2, (fc + tc) // 2
+            if self.board[mr][mc] == self.GOAT:
+                self.board[mr][mc] = self.EMPTY
+                self.goats_captured += 1
+        self.board[tr][tc] = self.board[fr][fc]
+        self.board[fr][fc] = self.EMPTY
 
     def bot_move_if_needed(self):
         if self.game_over:
             return
-        if self.current_phase == self.PLACEMENT_PHASE and self.current_player == self.GOAT_PLAYER and self.bot_goat and self.goats_placed < 20:
-            empties = [(i, j) for i in range(self.BOARD_SIZE) for j in range(self.BOARD_SIZE) if self.board[i][j] == self.EMPTY]
-            if empties:
-                row, col = random.choice(empties)
-                self.board[row][col] = self.GOAT
+        if self.phase == self.PLACEMENT_PHASE and self.turn == self.GOAT_PLAYER and self.bot_goat and self.goats_placed < 20:
+            choices = [(i, j) for i in range(self.BOARD_SIZE) for j in range(self.BOARD_SIZE) if self.board[i][j] == self.EMPTY]
+            if choices:
+                r, c = random.choice(choices)
+                self.board[r][c] = self.GOAT
                 self.goats_placed += 1
                 if self.goats_placed == 20:
-                    self.current_phase = self.MOVEMENT_PHASE
-                self.current_player = self.TIGER_PLAYER
-                self.draw_board()
-                self.update_status()
-                self.check_win_condition()
-                self.root.after(300, self.bot_move_if_needed)
-        elif self.current_phase == self.MOVEMENT_PHASE:
-            bot_side = (self.current_player == self.TIGER_PLAYER and self.bot_tiger) or (self.current_player == self.GOAT_PLAYER and self.bot_goat)
-            if bot_side:
-                moves = []
-                for i in range(self.BOARD_SIZE):
-                    for j in range(self.BOARD_SIZE):
-                        if (self.current_player == self.TIGER_PLAYER and self.board[i][j] == self.TIGER) or (self.current_player == self.GOAT_PLAYER and self.board[i][j] == self.GOAT):
-                            for ni, nj in self.connections[(i, j)]:
-                                if self.is_valid_move(i, j, ni, nj):
-                                    moves.append((i, j, ni, nj))
-                            # Tiger jumps
-                            if self.current_player == self.TIGER_PLAYER:
-                                for di in [-2, -1, 0, 1, 2]:
-                                    for dj in [-2, -1, 0, 1, 2]:
-                                        if di == 0 and dj == 0:
-                                            continue
-                                        ni, nj = i + di, j + dj
-                                        if 0 <= ni < self.BOARD_SIZE and 0 <= nj < self.BOARD_SIZE:
-                                            if self.is_valid_move(i, j, ni, nj):
-                                                moves.append((i, j, ni, nj))
-                if moves:
-                    fr, fc, tr, tc = random.choice(moves)
-                    self.make_move(fr, fc, tr, tc)
-                    self.current_player = 1 - self.current_player
-                    self.draw_board()
-                    self.update_status()
-                    self.check_win_condition()
-                    self.root.after(300, self.bot_move_if_needed)
+                    self.phase = self.MOVEMENT_PHASE
+                self.turn = self.TIGER_PLAYER
+        elif self.phase == self.MOVEMENT_PHASE and ((self.turn == self.TIGER_PLAYER and self.bot_tiger) or (self.turn == self.GOAT_PLAYER and self.bot_goat)):
+            moves = []
+            for i in range(self.BOARD_SIZE):
+                for j in range(self.BOARD_SIZE):
+                    if self.board[i][j] == (self.TIGER if self.turn == self.TIGER_PLAYER else self.GOAT):
+                        for ni, nj in self.connections[(i, j)]:
+                            if self.is_valid_move(i, j, ni, nj):
+                                moves.append((i, j, ni, nj))
+                        if self.board[i][j] == self.TIGER:
+                            for di in [-2, 0, 2]:
+                                for dj in [-2, 0, 2]:
+                                    ni, nj = i + di, j + dj
+                                    if 0 <= ni < self.BOARD_SIZE and 0 <= nj < self.BOARD_SIZE and self.is_valid_move(i, j, ni, nj):
+                                        moves.append((i, j, ni, nj))
+            if moves:
+                fr, fc, tr, tc = random.choice(moves)
+                self.make_move(fr, fc, tr, tc)
+                self.turn = 1 - self.turn
+        self.draw()
+        self.check_win()
+        self.root.after(300, self.bot_move_if_needed)
 
-    def update_status(self):
-        """Update status labels"""
-        if self.game_over:
-            status_text = f"Game Over! Winner: {self.winner}"
-        else:
-            phase_text = "Placement Phase" if self.current_phase == self.PLACEMENT_PHASE else "Movement Phase"
-            player_text = "Tigers" if self.current_player == self.TIGER_PLAYER else "Goats"
-            status_text = f"{phase_text} - Current Player: {player_text}"
+    def check_win(self):
+        if self.goats_captured >= 5:
+            self.game_over = True
+            messagebox.showinfo("Game Over", "Tigers Win!")
+        elif self.phase == self.MOVEMENT_PHASE and not self.can_tigers_move():
+            self.game_over = True
+            messagebox.showinfo("Game Over", "Goats Win!")
 
-        self.status_label.config(text=status_text)
-
-        # Update instructions
-        if self.game_over:
-            instruction_text = f"🎉 {self.winner} have won the game! Click 'Restart Game' to play again."
-        elif self.current_phase == self.PLACEMENT_PHASE:
-            instruction_text = f"🐐 Place goats on empty intersections. Goats placed: {self.goats_placed}/20"
-        elif self.current_player == self.TIGER_PLAYER:
-            if self.piece_selected:
-                instruction_text = "🐅 Tiger selected! Click on an empty adjacent position or jump over a goat to capture it."
-            else:
-                instruction_text = "🐅 Tigers' turn! Click on a tiger to select it."
-        else:
-            if self.piece_selected:
-                instruction_text = "🐐 Goat selected! Click on an empty adjacent position to move."
-            else:
-                instruction_text = "🐐 Goats' turn! Click on a goat to select it."
-
-        additional_info = f"Goats captured: {self.goats_captured}/5"
-        self.instruction_label.config(text=f"{instruction_text}\n{additional_info}")
-
-    def show_rules(self):
-        """Display game rules"""
-        rules_text = """
-🐅 BAGH-CHAL RULES 🐐
-OBJECTIVE:
-• Tigers: Capture 5 goats to win
-• Goats: Block all tigers so they cannot move
-
-SETUP:
-• 4 tigers start at the corners
-• 20 goats to be placed during the game
-
-GAMEPLAY:
-1. PLACEMENT PHASE:
-   • Goats are placed one by one on empty intersections
-   • After each goat placement, tigers can move
-
-2. MOVEMENT PHASE (after all 20 goats are placed):
-   • Both tigers and goats can move to adjacent empty positions
-   • Tigers can also jump over goats to capture them
-   • Only one piece can be moved per turn
-
-MOVEMENT RULES:
-• All pieces move along the lines to adjacent intersections
-• Tigers can jump over adjacent goats to capture them
-• Captured goats are removed from the board
-• Goats cannot jump or capture
-
-WIN CONDITIONS:
-• Tigers win by capturing 5 goats
- • Goats win by blocking all tigers from moving
-          """
-        messagebox.showinfo("Bagh-Chal Rules", rules_text)
+    def can_tigers_move(self):
+        for i in range(self.BOARD_SIZE):
+            for j in range(self.BOARD_SIZE):
+                if self.board[i][j] == self.TIGER:
+                    for ni, nj in self.connections[(i, j)]:
+                        if self.is_valid_move(i, j, ni, nj):
+                            return True
+        return False
 
     def ask_bot_mode(self):
         import tkinter.simpledialog as sd
         root = tk.Tk()
         root.withdraw()
-        mode = sd.askstring(
-            "Choose Mode",
-            "1: Human vs Human\n2: Human vs Bot (Bot=Tigers)\n3: Human vs Bot (Bot=Goats)\nEnter 1, 2, or 3:",
-        )
+        mode = sd.askstring("Choose Mode", "1: Human vs Human\n2: Human vs Bot (Bot=Tigers)\n3: Human vs Bot (Bot=Goats)")
         if mode == '2':
             self.bot_tiger = True
         elif mode == '3':
@@ -427,10 +179,7 @@ WIN CONDITIONS:
         root.destroy()
 
     def run(self):
-        """Start the game"""
         self.root.mainloop()
 
-# Run the game
 if __name__ == "__main__":
-    game = BaghChalTkinter()
-    game.run()
+    BaghChal().run()
