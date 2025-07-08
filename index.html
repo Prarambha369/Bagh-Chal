@@ -157,7 +157,6 @@
     Click to start playing!
 </div>
 
-<!-- Rules Modal -->
 <div id="rulesModal" class="modal">
     <div class="modal-content">
         <span class="close" onclick="closeRules()">&times;</span>
@@ -196,26 +195,17 @@
 </div>
 
 <script>
-    // Game constants
     const BOARD_SIZE = 5;
     const CANVAS_SIZE = 500;
     const CELL_SIZE = CANVAS_SIZE / (BOARD_SIZE + 1);
     const OFFSET = CELL_SIZE;
-
-    // Game states
     const PLACEMENT_PHASE = 0;
     const MOVEMENT_PHASE = 1;
-
-    // Piece types
     const EMPTY = 0;
     const TIGER = 1;
     const GOAT = 2;
-
-    // Players
     const TIGER_PLAYER = 0;
     const GOAT_PLAYER = 1;
-
-    // Game variables
     let currentPhase = PLACEMENT_PHASE;
     let currentPlayer = GOAT_PLAYER;
     let board = [];
@@ -227,12 +217,8 @@
     let gameOver = false;
     let winner = null;
     let connections = {};
-
-    // Canvas setup
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-
-    // Initialize game
     function initGame() {
         setupConnections();
         resetGame();
@@ -269,8 +255,6 @@
         pieceSelected = false;
         gameOver = false;
         winner = null;
-
-        // Place initial tigers at corners
         board[0][0] = TIGER;
         board[0][4] = TIGER;
         board[4][0] = TIGER;
@@ -299,7 +283,6 @@
     function drawBoard() {
         ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
 
-        // Draw grid lines
         ctx.strokeStyle = '#ecf0f1';
         ctx.lineWidth = 2;
 
@@ -320,7 +303,6 @@
             }
         }
 
-        // Draw intersection points
         for (let i = 0; i < BOARD_SIZE; i++) {
             for (let j = 0; j < BOARD_SIZE; j++) {
                 const [x, y] = getCanvasCoords(i, j);
@@ -333,7 +315,6 @@
             }
         }
 
-        // Draw pieces
         drawPieces();
     }
 
@@ -343,7 +324,6 @@
                 const [x, y] = getCanvasCoords(i, j);
 
                 if (board[i][j] === TIGER) {
-                    // Draw tiger
                     ctx.fillStyle = '#ff6b35';
                     ctx.strokeStyle = '#d35400';
                     ctx.lineWidth = 3;
@@ -351,14 +331,11 @@
                     ctx.arc(x, y, 20, 0, 2 * Math.PI);
                     ctx.fill();
                     ctx.stroke();
-
-                    // Tiger emoji
                     ctx.font = '16px Arial';
                     ctx.fillStyle = 'white';
                     ctx.textAlign = 'center';
                     ctx.fillText('🐅', x, y + 5);
                 } else if (board[i][j] === GOAT) {
-                    // Draw goat
                     ctx.fillStyle = '#ecf0f1';
                     ctx.strokeStyle = '#95a5a6';
                     ctx.lineWidth = 2;
@@ -366,8 +343,6 @@
                     ctx.arc(x, y, 15, 0, 2 * Math.PI);
                     ctx.fill();
                     ctx.stroke();
-
-                    // Goat emoji
                     ctx.font = '12px Arial';
                     ctx.fillStyle = 'black';
                     ctx.textAlign = 'center';
@@ -376,7 +351,6 @@
             }
         }
 
-        // Highlight selected piece
         if (pieceSelected) {
             const [x, y] = getCanvasCoords(selectedRow, selectedCol);
             ctx.strokeStyle = '#2ecc71';
@@ -392,15 +366,12 @@
             return false;
         }
 
-        // Check direct move (adjacent)
         const neighbors = connections[`${fromRow},${fromCol}`];
         for (const [nr, nc] of neighbors) {
             if (nr === toRow && nc === toCol) {
                 return true;
             }
         }
-
-        // Check tiger jump (capture)
         if (board[fromRow][fromCol] === TIGER) {
             if (Math.abs(toRow - fromRow) === 2 && Math.abs(toCol - fromCol) <= 2) {
                 const midRow = Math.floor((fromRow + toRow) / 2);
@@ -425,7 +396,6 @@
         board[fromRow][fromCol] = EMPTY;
         board[toRow][toCol] = piece;
 
-        // Check for capture
         if (piece === TIGER && (Math.abs(toRow - fromRow) === 2 || Math.abs(toCol - fromCol) === 2)) {
             const midRow = Math.floor((fromRow + toRow) / 2);
             const midCol = Math.floor((fromCol + toCol) / 2);
@@ -440,14 +410,12 @@
         for (let i = 0; i < BOARD_SIZE; i++) {
             for (let j = 0; j < BOARD_SIZE; j++) {
                 if (board[i][j] === TIGER) {
-                    // Check all possible moves
                     const neighbors = connections[`${i},${j}`];
                     for (const [ni, nj] of neighbors) {
                         if (isValidMove(i, j, ni, nj)) {
                             return true;
                         }
                     }
-                    // Check jump moves
                     for (let di = -2; di <= 2; di++) {
                         for (let dj = -2; dj <= 2; dj++) {
                             if (di === 0 && dj === 0) continue;
@@ -489,7 +457,6 @@
         if (row === null || col === null) return;
 
         if (currentPhase === PLACEMENT_PHASE && currentPlayer === GOAT_PLAYER) {
-            // Place goat
             if (board[row][col] === EMPTY && goatsPlaced < 20) {
                 board[row][col] = GOAT;
                 goatsPlaced++;
@@ -501,9 +468,8 @@
                 currentPlayer = TIGER_PLAYER;
             }
         } else {
-            // Movement phase or tiger turn
-            if (!pieceSelected) {
-                // Select piece
+                     if (!pieceSelected) {
+
                 if ((currentPlayer === TIGER_PLAYER && board[row][col] === TIGER) ||
                     (currentPlayer === GOAT_PLAYER && board[row][col] === GOAT)) {
                     selectedRow = row;
@@ -511,30 +477,24 @@
                     pieceSelected = true;
                 }
             } else {
-                // Move piece
+
                 if (row === selectedRow && col === selectedCol) {
-                    // Deselect if clicking same piece
                     pieceSelected = false;
                     selectedRow = -1;
                     selectedCol = -1;
                 } else if (isValidMove(selectedRow, selectedCol, row, col)) {
-                    // Valid move
                     makeMove(selectedRow, selectedCol, row, col);
                     pieceSelected = false;
                     selectedRow = -1;
                     selectedCol = -1;
-
-                    // Switch player
                     currentPlayer = 1 - currentPlayer;
                 } else {
-                    // Invalid move - try to select new piece
                     if ((currentPlayer === TIGER_PLAYER && board[row][col] === TIGER) ||
                         (currentPlayer === GOAT_PLAYER && board[row][col] === GOAT)) {
                         selectedRow = row;
                         selectedCol = col;
                         pieceSelected = true;
                     } else {
-                        // Invalid selection, deselect current piece
                         pieceSelected = false;
                         selectedRow = -1;
                         selectedCol = -1;
@@ -588,10 +548,8 @@
         document.getElementById('rulesModal').style.display = 'none';
     }
 
-    // Initialize game when page loads
     window.addEventListener('load', initGame);
 
-    // Close modal when clicking outside
     window.addEventListener('click', function(event) {
         const modal = document.getElementById('rulesModal');
         if (event.target === modal) {
