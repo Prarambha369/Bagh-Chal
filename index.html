@@ -5,106 +5,203 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🐅 Bagh-Chal: Tiger and Goats 🐐</title>
     <style>
-        /* CSS styles remain the same */
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .status-panel {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .game-board {
+            background: #34495e;
+            border: 3px solid #ecf0f1;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn-restart { background: #3498db; color: white; }
+        .btn-rules { background: #2ecc71; color: white; }
+        .btn-quit { background: #e74c3c; color: white; }
+
+        .instructions {
+            background: rgba(243, 156, 18, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            text-align: center;
+            max-width: 600px;
+            line-height: 1.4;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: #2c3e50;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 80%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close:hover { color: #fff; }
+
+        .rules-content {
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .rules-content h3 {
+            color: #3498db;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
-<!-- Startup Modal -->
-<div id="startupModal" class="modal" style="display:flex;align-items:center;justify-content:center;">
-    <div class="modal-content" style="max-width:340px;text-align:center;">
-        <h2 style="margin-bottom:20px;">Bagh-Chal: Select Mode</h2>
-        <label for="startupModeSelect"><b>Choose Game Mode:</b></label>
-        <select id="startupModeSelect" style="margin:16px 0;padding:10px 16px;font-size:16px;">
-            <option value="human">Human vs Human</option>
-            <option value="botTiger">Human vs Bot (Bot=Tigers)</option>
-            <option value="botGoat">Human vs Bot (Bot=Goats)</option>
-        </select>
-        <br>
-        <button id="startupStartBtn" class="btn btn-restart" style="font-size:18px;padding:14px 32px;margin-top:10px;">▶️ Start Game</button>
-    </div>
-</div>
-<!-- Quit Modal -->
-<div id="quitModal" class="modal">
-    <div class="modal-content" style="max-width:400px;text-align:center;">
-        <span class="close" id="closeQuit">&times;</span>
-        <h2 style="margin-bottom:20px;">❌ Quit Game</h2>
-        <p>How would you like to quit?</p>
-        <div class="quit-options">
-            <div class="quit-option" id="quitToStart">🏠 Return to Start Screen</div>
-            <div class="quit-option" id="quitMinimize">📱 Minimize Window</div>
-            <div class="quit-option" id="quitBlank">⚫ Show Blank Screen</div>
-        </div>
-        <button id="cancelQuit" class="btn btn-restart" style="margin-top:20px;">↩️ Cancel</button>
-    </div>
-</div>
 <div class="title">🐅 Bagh-Chal: Tiger and Goats 🐐</div>
-<div id="modeDisplay"></div>
+
 <div class="status-panel">
     <div id="status">Loading game...</div>
 </div>
+
 <canvas id="gameCanvas" class="game-board" width="500" height="500"></canvas>
+
 <div class="controls">
-    <button id="restartBtn" class="btn btn-restart">🔄 Restart Game</button>
-    <button id="rulesBtn" class="btn btn-rules">📖 Rules</button>
-    <button id="quitBtn" class="btn btn-quit">❌ Quit</button>
+    <button class="btn btn-restart" onclick="resetGame()">🔄 Restart Game</button>
+    <button class="btn btn-rules" onclick="showRules()">📖 Rules</button>
+    <button class="btn btn-quit" onclick="window.close()">❌ Quit</button>
 </div>
-<div class="instructions" id="instructions"></div>
+
+<div class="instructions" id="instructions">
+    Click to start playing!
+</div>
+
 <!-- Rules Modal -->
 <div id="rulesModal" class="modal">
     <div class="modal-content">
-        <span class="close" id="closeRules">&times;</span>
+        <span class="close" onclick="closeRules()">&times;</span>
         <div class="rules-content">
             <h2>🐅 BAGH-CHAL RULES 🐐</h2>
+
             <h3>OBJECTIVE:</h3>
             <p>• <strong>Tigers:</strong> Capture 5 goats to win<br>
                 • <strong>Goats:</strong> Block all tigers so they cannot move</p>
+
             <h3>SETUP:</h3>
             <p>• 4 tigers start at the corners<br>
                 • 20 goats to be placed during the game</p>
+
             <h3>GAMEPLAY:</h3>
             <p><strong>1. PLACEMENT PHASE:</strong><br>
                 • Goats are placed one by one on empty intersections<br>
                 • After each goat placement, tigers can move</p>
+
             <p><strong>2. MOVEMENT PHASE</strong> (after all 20 goats are placed):<br>
                 • Both tigers and goats can move to adjacent empty positions<br>
                 • Tigers can also jump over goats to capture them<br>
                 • Only one piece can be moved per turn</p>
+
             <h3>MOVEMENT RULES:</h3>
             <p>• All pieces move along the lines to adjacent intersections<br>
                 • Tigers can jump over adjacent goats to capture them<br>
                 • Captured goats are removed from the board<br>
                 • Goats cannot jump or capture</p>
+
             <h3>WIN CONDITIONS:</h3>
             <p>• <strong>Tigers win</strong> by capturing 5 goats<br>
                 • <strong>Goats win</strong> by blocking all tigers from moving</p>
         </div>
     </div>
 </div>
+
 <script>
     // Game constants
     const BOARD_SIZE = 5;
     const CANVAS_SIZE = 500;
     const CELL_SIZE = CANVAS_SIZE / (BOARD_SIZE + 1);
     const OFFSET = CELL_SIZE;
-    
+
     // Game states
     const PLACEMENT_PHASE = 0;
     const MOVEMENT_PHASE = 1;
-    
+
     // Piece types
     const EMPTY = 0;
     const TIGER = 1;
     const GOAT = 2;
-    
+
     // Players
     const TIGER_PLAYER = 0;
     const GOAT_PLAYER = 1;
-    
-    // Bot mode variables
-    let botTiger = false;
-    let botGoat = false;
-    let botThinking = false;
-    
+
     // Game variables
     let currentPhase = PLACEMENT_PHASE;
     let currentPlayer = GOAT_PLAYER;
@@ -117,35 +214,25 @@
     let gameOver = false;
     let winner = null;
     let connections = {};
-    
+
     // Canvas setup
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    
-    function askBotMode() {
-        const mode = prompt(
-            "Choose Mode:\n1: Human vs Human\n2: Human vs Bot (Bot=Tigers)\n3: Human vs Bot (Bot=Goats)\nEnter 1, 2, or 3:",
-            "1"
-        );
-        if (mode === '2') botTiger = true;
-        else if (mode === '3') botGoat = true;
-    }
-    
+
     // Initialize game
     function initGame() {
-        askBotMode();
         setupConnections();
         resetGame();
         canvas.addEventListener('click', onCanvasClick);
     }
-    
+
     function setupConnections() {
         connections = {};
         for (let i = 0; i < BOARD_SIZE; i++) {
             for (let j = 0; j < BOARD_SIZE; j++) {
                 const neighbors = [];
                 const directions = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
-                
+
                 for (const [di, dj] of directions) {
                     const ni = i + di;
                     const nj = j + dj;
@@ -157,7 +244,7 @@
             }
         }
     }
-    
+
     function resetGame() {
         currentPhase = PLACEMENT_PHASE;
         currentPlayer = GOAT_PLAYER;
@@ -169,47 +256,45 @@
         pieceSelected = false;
         gameOver = false;
         winner = null;
-        botThinking = false;
-        
+
         // Place initial tigers at corners
         board[0][0] = TIGER;
         board[0][4] = TIGER;
         board[4][0] = TIGER;
         board[4][4] = TIGER;
-        
+
         drawBoard();
         updateStatus();
-        setTimeout(botMoveIfNeeded, 300); // Bot can start if it's first
     }
-    
+
     function getCanvasCoords(row, col) {
         const x = OFFSET + col * CELL_SIZE;
         const y = OFFSET + row * CELL_SIZE;
         return [x, y];
     }
-    
+
     function getBoardCoords(canvasX, canvasY) {
         const col = Math.round((canvasX - OFFSET) / CELL_SIZE);
         const row = Math.round((canvasY - OFFSET) / CELL_SIZE);
-        
+
         if (row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE) {
             return [row, col];
         }
         return [null, null];
     }
-    
+
     function drawBoard() {
         ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-        
+
         // Draw grid lines
         ctx.strokeStyle = '#ecf0f1';
         ctx.lineWidth = 2;
-        
+
         for (let i = 0; i < BOARD_SIZE; i++) {
             for (let j = 0; j < BOARD_SIZE; j++) {
                 const [x, y] = getCanvasCoords(i, j);
                 const neighbors = connections[`${i},${j}`];
-                
+
                 for (const [ni, nj] of neighbors) {
                     if (ni > i || (ni === i && nj > j)) { // Avoid duplicate lines
                         const [nx, ny] = getCanvasCoords(ni, nj);
@@ -221,7 +306,7 @@
                 }
             }
         }
-        
+
         // Draw intersection points
         for (let i = 0; i < BOARD_SIZE; i++) {
             for (let j = 0; j < BOARD_SIZE; j++) {
@@ -234,16 +319,16 @@
                 ctx.stroke();
             }
         }
-        
+
         // Draw pieces
         drawPieces();
     }
-    
+
     function drawPieces() {
         for (let i = 0; i < BOARD_SIZE; i++) {
             for (let j = 0; j < BOARD_SIZE; j++) {
                 const [x, y] = getCanvasCoords(i, j);
-                
+
                 if (board[i][j] === TIGER) {
                     // Draw tiger
                     ctx.fillStyle = '#ff6b35';
@@ -253,7 +338,7 @@
                     ctx.arc(x, y, 20, 0, 2 * Math.PI);
                     ctx.fill();
                     ctx.stroke();
-                    
+
                     // Tiger emoji
                     ctx.font = '16px Arial';
                     ctx.fillStyle = 'white';
@@ -268,7 +353,7 @@
                     ctx.arc(x, y, 15, 0, 2 * Math.PI);
                     ctx.fill();
                     ctx.stroke();
-                    
+
                     // Goat emoji
                     ctx.font = '12px Arial';
                     ctx.fillStyle = 'black';
@@ -277,7 +362,7 @@
                 }
             }
         }
-        
+
         // Highlight selected piece
         if (pieceSelected) {
             const [x, y] = getCanvasCoords(selectedRow, selectedCol);
@@ -288,12 +373,12 @@
             ctx.stroke();
         }
     }
-    
+
     function isValidMove(fromRow, fromCol, toRow, toCol) {
         if (board[toRow][toCol] !== EMPTY) {
             return false;
         }
-        
+
         // Check direct move (adjacent)
         const neighbors = connections[`${fromRow},${fromCol}`];
         for (const [nr, nc] of neighbors) {
@@ -301,7 +386,7 @@
                 return true;
             }
         }
-        
+
         // Check tiger jump (capture)
         if (board[fromRow][fromCol] === TIGER) {
             if (Math.abs(toRow - fromRow) === 2 && Math.abs(toCol - fromCol) <= 2) {
@@ -318,15 +403,15 @@
                 }
             }
         }
-        
+
         return false;
     }
-    
+
     function makeMove(fromRow, fromCol, toRow, toCol) {
         const piece = board[fromRow][fromCol];
         board[fromRow][fromCol] = EMPTY;
         board[toRow][toCol] = piece;
-        
+
         // Check for capture
         if (piece === TIGER && (Math.abs(toRow - fromRow) === 2 || Math.abs(toCol - fromCol) === 2)) {
             const midRow = Math.floor((fromRow + toRow) / 2);
@@ -337,7 +422,7 @@
             }
         }
     }
-    
+
     function canTigersMove() {
         for (let i = 0; i < BOARD_SIZE; i++) {
             for (let j = 0; j < BOARD_SIZE; j++) {
@@ -367,7 +452,7 @@
         }
         return false;
     }
-    
+
     function checkWinCondition() {
         if (goatsCaptured >= 5) {
             gameOver = true;
@@ -379,155 +464,80 @@
             alert("🐐 Goats Win! All tigers are blocked!");
         }
     }
-    
-    function afterMove() {
-        drawBoard();
-        updateStatus();
-        checkWinCondition();
-        setTimeout(botMoveIfNeeded, 300);
-    }
-    
+
     function onCanvasClick(event) {
-        if (gameOver || botThinking) return;
-        
+        if (gameOver) return;
+
         const rect = canvas.getBoundingClientRect();
         const canvasX = event.clientX - rect.left;
         const canvasY = event.clientY - rect.top;
         const [row, col] = getBoardCoords(canvasX, canvasY);
-        
+
         if (row === null || col === null) return;
-        
-        if (currentPhase === PLACEMENT_PHASE && currentPlayer === GOAT_PLAYER && !botGoat) {
+
+        if (currentPhase === PLACEMENT_PHASE && currentPlayer === GOAT_PLAYER) {
             // Place goat
             if (board[row][col] === EMPTY && goatsPlaced < 20) {
                 board[row][col] = GOAT;
                 goatsPlaced++;
+
                 if (goatsPlaced === 20) {
                     currentPhase = MOVEMENT_PHASE;
                 }
+
                 currentPlayer = TIGER_PLAYER;
             }
-            afterMove();
-            return;
-        }
-        
-        // Movement phase or tiger turn
-        if (!pieceSelected) {
-            // Select piece
-            if ((currentPlayer === TIGER_PLAYER && board[row][col] === TIGER && !botTiger) ||
-                (currentPlayer === GOAT_PLAYER && board[row][col] === GOAT && !botGoat)) {
-                selectedRow = row;
-                selectedCol = col;
-                pieceSelected = true;
-            }
         } else {
-            // Move piece
-            if (row === selectedRow && col === selectedCol) {
-                // Deselect if clicking same piece
-                pieceSelected = false;
-                selectedRow = -1;
-                selectedCol = -1;
-            } else if (isValidMove(selectedRow, selectedCol, row, col)) {
-                // Valid move
-                makeMove(selectedRow, selectedCol, row, col);
-                pieceSelected = false;
-                selectedRow = -1;
-                selectedCol = -1;
-                // Switch player
-                currentPlayer = 1 - currentPlayer;
-                afterMove();
-                return;
-            } else {
-                // Invalid move - try to select new piece
-                if ((currentPlayer === TIGER_PLAYER && board[row][col] === TIGER && !botTiger) ||
-                    (currentPlayer === GOAT_PLAYER && board[row][col] === GOAT && !botGoat)) {
+            // Movement phase or tiger turn
+            if (!pieceSelected) {
+                // Select piece
+                if ((currentPlayer === TIGER_PLAYER && board[row][col] === TIGER) ||
+                    (currentPlayer === GOAT_PLAYER && board[row][col] === GOAT)) {
                     selectedRow = row;
                     selectedCol = col;
                     pieceSelected = true;
-                } else {
-                    // Invalid selection, deselect current piece
+                }
+            } else {
+                // Move piece
+                if (row === selectedRow && col === selectedCol) {
+                    // Deselect if clicking same piece
                     pieceSelected = false;
                     selectedRow = -1;
                     selectedCol = -1;
+                } else if (isValidMove(selectedRow, selectedCol, row, col)) {
+                    // Valid move
+                    makeMove(selectedRow, selectedCol, row, col);
+                    pieceSelected = false;
+                    selectedRow = -1;
+                    selectedCol = -1;
+
+                    // Switch player
+                    currentPlayer = 1 - currentPlayer;
+                } else {
+                    // Invalid move - try to select new piece
+                    if ((currentPlayer === TIGER_PLAYER && board[row][col] === TIGER) ||
+                        (currentPlayer === GOAT_PLAYER && board[row][col] === GOAT)) {
+                        selectedRow = row;
+                        selectedCol = col;
+                        pieceSelected = true;
+                    } else {
+                        // Invalid selection, deselect current piece
+                        pieceSelected = false;
+                        selectedRow = -1;
+                        selectedCol = -1;
+                    }
                 }
             }
         }
+
         drawBoard();
         updateStatus();
+        checkWinCondition();
     }
-    
-    function botMoveIfNeeded() {
-        if (gameOver) return;
-        if (currentPhase === PLACEMENT_PHASE && currentPlayer === GOAT_PLAYER && botGoat && goatsPlaced < 20) {
-            botThinking = true;
-            setTimeout(() => {
-                // Place goat randomly
-                let empties = [];
-                for (let i = 0; i < BOARD_SIZE; i++) {
-                    for (let j = 0; j < BOARD_SIZE; j++) {
-                        if (board[i][j] === EMPTY) empties.push([i, j]);
-                    }
-                }
-                if (empties.length) {
-                    const [row, col] = empties[Math.floor(Math.random() * empties.length)];
-                    board[row][col] = GOAT;
-                    goatsPlaced++;
-                    if (goatsPlaced === 20) currentPhase = MOVEMENT_PHASE;
-                    currentPlayer = TIGER_PLAYER;
-                }
-                botThinking = false;
-                afterMove();
-            }, 400);
-        } else if (currentPhase === MOVEMENT_PHASE) {
-            let botSide = (currentPlayer === TIGER_PLAYER && botTiger) || (currentPlayer === GOAT_PLAYER && botGoat);
-            if (botSide) {
-                botThinking = true;
-                setTimeout(() => {
-                    // Find all valid moves for bot
-                    let moves = [];
-                    for (let i = 0; i < BOARD_SIZE; i++) {
-                        for (let j = 0; j < BOARD_SIZE; j++) {
-                            if ((currentPlayer === TIGER_PLAYER && board[i][j] === TIGER) ||
-                                (currentPlayer === GOAT_PLAYER && board[i][j] === GOAT)) {
-                                const neighbors = connections[`${i},${j}`];
-                                for (const [ni, nj] of neighbors) {
-                                    if (isValidMove(i, j, ni, nj)) {
-                                        moves.push([i, j, ni, nj]);
-                                    }
-                                }
-                                // Tiger jumps
-                                if (currentPlayer === TIGER_PLAYER) {
-                                    for (let di = -2; di <= 2; di++) {
-                                        for (let dj = -2; dj <= 2; dj++) {
-                                            if (di === 0 && dj === 0) continue;
-                                            const ni = i + di;
-                                            const nj = j + dj;
-                                            if (ni >= 0 && ni < BOARD_SIZE && nj >= 0 && nj < BOARD_SIZE) {
-                                                if (isValidMove(i, j, ni, nj)) {
-                                                    moves.push([i, j, ni, nj]);
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if (moves.length) {
-                        const [fr, fc, tr, tc] = moves[Math.floor(Math.random() * moves.length)];
-                        makeMove(fr, fc, tr, tc);
-                        currentPlayer = 1 - currentPlayer;
-                    }
-                    botThinking = false;
-                    afterMove();
-                }, 400);
-            }
-        }
-    }
-    
+
     function updateStatus() {
         let statusText, instructionText;
-        
+
         if (gameOver) {
             statusText = `Game Over! Winner: ${winner}`;
             instructionText = `🎉 ${winner} have won the game! Click 'Restart Game' to play again.`;
@@ -535,7 +545,7 @@
             const phaseText = currentPhase === PLACEMENT_PHASE ? "Placement Phase" : "Movement Phase";
             const playerText = currentPlayer === TIGER_PLAYER ? "Tigers" : "Goats";
             statusText = `${phaseText} - Current Player: ${playerText}`;
-            
+
             if (currentPhase === PLACEMENT_PHASE) {
                 instructionText = `🐐 Place goats on empty intersections. Goats placed: ${goatsPlaced}/20`;
             } else if (currentPlayer === TIGER_PLAYER) {
@@ -552,22 +562,22 @@
                 }
             }
         }
-        
+
         document.getElementById('status').textContent = statusText;
         document.getElementById('instructions').innerHTML = `${instructionText}<br>Goats captured: ${goatsCaptured}/5`;
     }
-    
+
     function showRules() {
         document.getElementById('rulesModal').style.display = 'block';
     }
-    
+
     function closeRules() {
         document.getElementById('rulesModal').style.display = 'none';
     }
-    
+
     // Initialize game when page loads
     window.addEventListener('load', initGame);
-    
+
     // Close modal when clicking outside
     window.addEventListener('click', function(event) {
         const modal = document.getElementById('rulesModal');
