@@ -8,39 +8,27 @@ class BaghChalTkinter:
         self.root.title("Bagh-Chal: Tiger and Goats")
         self.root.geometry("700x600")
         self.root.configure(bg='#2c3e50')
-
-        # Game constants
         self.BOARD_SIZE = 5
         self.CANVAS_SIZE = 500
         self.CELL_SIZE = self.CANVAS_SIZE // (self.BOARD_SIZE + 1)
         self.OFFSET = self.CELL_SIZE
-
-        # Game states
         self.PLACEMENT_PHASE = 0
         self.MOVEMENT_PHASE = 1
-
-        # Piece types
         self.EMPTY = 0
         self.TIGER = 1
         self.GOAT = 2
-
-        # Players
         self.TIGER_PLAYER = 0
         self.GOAT_PLAYER = 1
-
-        # Initialize game
         self.setup_ui()
         self.setup_connections()
         self.reset_game()
 
     def setup_ui(self):
         """Setup the user interface"""
-        # Title
         title_label = tk.Label(self.root, text="🐅 Bagh-Chal: Tiger and Goats 🐐",
                                font=('Arial', 16, 'bold'), bg='#2c3e50', fg='white')
         title_label.pack(pady=10)
 
-        # Status frame
         self.status_frame = tk.Frame(self.root, bg='#2c3e50')
         self.status_frame.pack(pady=5)
 
@@ -48,13 +36,11 @@ class BaghChalTkinter:
                                      bg='#2c3e50', fg='#ecf0f1')
         self.status_label.pack()
 
-        # Canvas for game board
         self.canvas = tk.Canvas(self.root, width=self.CANVAS_SIZE, height=self.CANVAS_SIZE,
                                 bg='#34495e', highlightthickness=2, highlightbackground='#ecf0f1')
         self.canvas.pack(pady=10)
         self.canvas.bind("<Button-1>", self.on_canvas_click)
 
-        # Control buttons
         button_frame = tk.Frame(self.root, bg='#2c3e50')
         button_frame.pack(pady=10)
 
@@ -70,7 +56,6 @@ class BaghChalTkinter:
                              font=('Arial', 12), bg='#e74c3c', fg='white', padx=20)
         quit_btn.pack(side=tk.LEFT, padx=10)
 
-        # Instructions
         self.instruction_label = tk.Label(self.root, text="", font=('Arial', 10),
                                           bg='#2c3e50', fg='#f39c12', wraplength=600)
         self.instruction_label.pack(pady=5)
@@ -88,7 +73,6 @@ class BaghChalTkinter:
         self.game_over = False
         self.winner = None
 
-        # Place initial tigers at corners
         self.board[0][0] = self.TIGER
         self.board[0][4] = self.TIGER
         self.board[4][0] = self.TIGER
@@ -132,7 +116,6 @@ class BaghChalTkinter:
         """Draw the game board"""
         self.canvas.delete("all")
 
-        # Draw grid lines
         for i in range(self.BOARD_SIZE):
             for j in range(self.BOARD_SIZE):
                 x, y = self.get_canvas_coords(i, j)
@@ -149,7 +132,6 @@ class BaghChalTkinter:
                 x, y = self.get_canvas_coords(i, j)
                 self.canvas.create_oval(x-4, y-4, x+4, y+4, fill='#ecf0f1', outline='#bdc3c7')
 
-        # Draw pieces
         self.draw_pieces()
 
     def draw_pieces(self):
@@ -168,7 +150,6 @@ class BaghChalTkinter:
                     self.canvas.create_oval(x-15, y-15, x+15, y+15, fill='#ecf0f1', outline='#95a5a6', width=2)
                     self.canvas.create_text(x, y, text='🐐', font=('Arial', 12))
 
-        # Highlight selected piece
         if self.piece_selected:
             x, y = self.get_canvas_coords(self.selected_row, self.selected_col)
             self.canvas.create_oval(x-25, y-25, x+25, y+25, fill='', outline='#2ecc71', width=4)
@@ -178,11 +159,9 @@ class BaghChalTkinter:
         if self.board[to_row][to_col] != self.EMPTY:
             return False
 
-        # Check direct move (adjacent)
         if (to_row, to_col) in self.connections[(from_row, from_col)]:
             return True
 
-        # Check tiger jump (capture)
         if self.board[from_row][from_col] == self.TIGER:
             # Calculate middle position for jump
             if abs(to_row - from_row) == 2 and abs(to_col - from_col) <= 2:
@@ -204,7 +183,6 @@ class BaghChalTkinter:
         self.board[from_row][from_col] = self.EMPTY
         self.board[to_row][to_col] = piece
 
-        # Check for capture
         if piece == self.TIGER and (abs(to_row - from_row) == 2 or abs(to_col - from_col) == 2):
             mid_row = (from_row + to_row) // 2
             mid_col = (from_col + to_col) // 2
@@ -253,7 +231,6 @@ class BaghChalTkinter:
             return
 
         if self.current_phase == self.PLACEMENT_PHASE and self.current_player == self.GOAT_PLAYER:
-            # Place goat
             if self.board[row][col] == self.EMPTY and self.goats_placed < 20:
                 self.board[row][col] = self.GOAT
                 self.goats_placed += 1
@@ -263,39 +240,31 @@ class BaghChalTkinter:
 
                 self.current_player = self.TIGER_PLAYER
         else:
-            # Movement phase or tiger turn
             if not self.piece_selected:
-                # Select piece
                 if ((self.current_player == self.TIGER_PLAYER and self.board[row][col] == self.TIGER) or
                         (self.current_player == self.GOAT_PLAYER and self.board[row][col] == self.GOAT)):
                     self.selected_row = row
                     self.selected_col = col
                     self.piece_selected = True
             else:
-                # Move piece
                 if row == self.selected_row and col == self.selected_col:
-                    # Deselect if clicking same piece
                     self.piece_selected = False
                     self.selected_row = -1
                     self.selected_col = -1
                 elif self.is_valid_move(self.selected_row, self.selected_col, row, col):
-                    # Valid move
                     self.make_move(self.selected_row, self.selected_col, row, col)
                     self.piece_selected = False
                     self.selected_row = -1
                     self.selected_col = -1
 
-                    # Switch player
                     self.current_player = 1 - self.current_player
                 else:
-                    # Invalid move - try to select new piece if it belongs to current player
                     if ((self.current_player == self.TIGER_PLAYER and self.board[row][col] == self.TIGER) or
                             (self.current_player == self.GOAT_PLAYER and self.board[row][col] == self.GOAT)):
                         self.selected_row = row
                         self.selected_col = col
                         self.piece_selected = True
                     else:
-                        # Invalid selection, deselect current piece
                         self.piece_selected = False
                         self.selected_row = -1
                         self.selected_col = -1
@@ -315,7 +284,6 @@ class BaghChalTkinter:
 
         self.status_label.config(text=status_text)
 
-        # Update instructions
         if self.game_over:
             instruction_text = f"🎉 {self.winner} have won the game! Click 'Restart Game' to play again."
         elif self.current_phase == self.PLACEMENT_PHASE:
@@ -373,7 +341,6 @@ WIN CONDITIONS:
         """Start the game"""
         self.root.mainloop()
 
-# Run the game
 if __name__ == "__main__":
     game = BaghChalTkinter()
     game.run()
