@@ -1,8 +1,5 @@
 #include <iostream>
 #include <vector>
-#include <string>
-#include <iomanip>
-#include <random>
 using namespace std;
 
 const int BOARD_SIZE = 5;
@@ -11,27 +8,18 @@ const int TIGER = 1;
 const int GOAT = 2;
 const int TIGER_PLAYER = 0;
 const int GOAT_PLAYER = 1;
-
-struct Move {
-    int fromRow, fromCol, toRow, toCol;
-};
+const int PLACEMENT_PHASE = 0;
+const int MOVEMENT_PHASE = 1;
 
 class BaghChal {
     vector<vector<int>> board;
     int goatsPlaced, goatsCaptured, currentPlayer, phase;
-    int selectedRow, selectedCol;
-    static const int PLACEMENT_PHASE = 0;
-    static const int MOVEMENT_PHASE = 1;
-    bool botTiger = false, botGoat = false;
-    std::mt19937 rng{std::random_device{}()};
-
 public:
-    BaghChal(bool botT = false, bool botG = false) : botTiger(botT), botGoat(botG) {
+    BaghChal() {
         board = vector<vector<int>>(BOARD_SIZE, vector<int>(BOARD_SIZE, EMPTY));
         goatsPlaced = goatsCaptured = 0;
         currentPlayer = GOAT_PLAYER;
         phase = PLACEMENT_PHASE;
-        selectedRow = selectedCol = -1;
         // Place tigers at corners
         board[0][0] = board[0][4] = board[4][0] = board[4][4] = TIGER;
     }
@@ -88,58 +76,6 @@ public:
         return false;
     }
 
-    // Bot logic: pick a random valid move
-    bool botMove() {
-        vector<pair<int, int>> froms, tos;
-        if (phase == PLACEMENT_PHASE && currentPlayer == GOAT_PLAYER && botGoat && goatsPlaced < 20) {
-            // Place goat randomly
-            for (int i = 0; i < BOARD_SIZE; ++i)
-                for (int j = 0; j < BOARD_SIZE; ++j)
-                    if (board[i][j] == EMPTY) froms.emplace_back(i, j);
-            if (froms.empty()) return false;
-            auto [r, c] = froms[rng() % froms.size()];
-            board[r][c] = GOAT;
-            goatsPlaced++;
-            if (goatsPlaced == 20) phase = MOVEMENT_PHASE;
-            currentPlayer = TIGER_PLAYER;
-            return true;
-        } else {
-            // Movement phase
-            for (int i = 0; i < BOARD_SIZE; ++i) {
-                for (int j = 0; j < BOARD_SIZE; ++j) {
-                    if ((currentPlayer == TIGER_PLAYER && botTiger && board[i][j] == TIGER) ||
-                        (currentPlayer == GOAT_PLAYER && botGoat && board[i][j] == GOAT)) {
-                        for (int dr = -2; dr <= 2; ++dr) {
-                            for (int dc = -2; dc <= 2; ++dc) {
-                                if (dr == 0 && dc == 0) continue;
-                                int ni = i + dr, nj = j + dc;
-                                if (ni >= 0 && ni < BOARD_SIZE && nj >= 0 && nj < BOARD_SIZE && isValidMove(i, j, ni, nj)) {
-                                    froms.emplace_back(i, j);
-                                    tos.emplace_back(ni, nj);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            if (froms.empty()) return false;
-            int idx = rng() % froms.size();
-            int fr = froms[idx].first, fc = froms[idx].second, tr = tos[idx].first, tc = tos[idx].second;
-            if (board[fr][fc] == TIGER && abs(tr - fr) == 2 && abs(tc - fc) <= 2) {
-                int mr = (fr + tr) / 2, mc = (fc + tc) / 2;
-                if (board[mr][mc] == GOAT) {
-                    board[mr][mc] = EMPTY;
-                    goatsCaptured++;
-                }
-            }
-            board[tr][tc] = board[fr][fc];
-            board[fr][fc] = EMPTY;
-            currentPlayer = 1 - currentPlayer;
-            return true;
-        }
-        return false;
-    }
-
     void play() {
         while (true) {
             printBoard();
@@ -150,11 +86,6 @@ public:
             if (phase == MOVEMENT_PHASE && !canTigersMove()) {
                 cout << "\nGoats win!\n";
                 break;
-            }
-            if ((botGoat && currentPlayer == GOAT_PLAYER) || (botTiger && currentPlayer == TIGER_PLAYER)) {
-                cout << "Bot is thinking...\n";
-                botMove();
-                continue;
             }
             if (phase == PLACEMENT_PHASE && goatsPlaced < 20 && currentPlayer == GOAT_PLAYER) {
                 cout << "Goat Placement Phase. Enter row and col to place goat: ";
@@ -210,10 +141,7 @@ public:
 };
 
 int main() {
-    cout << "🐅 Bagh-Chal: Tiger and Goats (C++ Console Edition) 🐐\n";
-    cout << "Select mode: 1) Human vs Human  2) Human vs Bot (Bot=Tigers)  3) Human vs Bot (Bot=Goats): ";
-    int mode; cin >> mode;
-    BaghChal game(mode==2, mode==3);
+    BaghChal game;
     game.play();
     return 0;
 }
